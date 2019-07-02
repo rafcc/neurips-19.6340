@@ -1,0 +1,150 @@
+% if you need to pass options to natbib, use, e.g.:
+%     \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading neurips_2019
+
+% ready for submission
+ \usepackage[preprint]{neurips_2019}
+
+% to compile a preprint version, e.g., for submission to arXiv, add add the
+% [preprint] option:
+%     \usepackage[preprint]{neurips_2019}
+
+% to compile a camera-ready version, add the [final] option, e.g.:
+%     \usepackage[final]{neurips_2019}
+
+% to avoid loading the natbib package, add option nonatbib:
+%     \usepackage[nonatbib]{neurips_2019}
+
+%%%%%%%%%%%%
+%\usepackage[color]{showkeys}%ラベルを表示
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1\2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{graphicx}
+\usepackage{ascmac}
+\usepackage{amsmath,amssymb,amsfonts,array}
+\usepackage{theorem}
+\usepackage{bm}
+\usepackage{braket}
+\usepackage{extarrows}
+\usepackage{booktabs}
+\usepackage{algorithm,algorithmic}
+\usepackage{tikz}
+\usepackage{color}
+\usepackage{xcolor}
+\usepackage{subcaption}
+\usepackage{multirow}
+\usepackage{xr-hyper}
+\usepackage{hyperref}
+\usepackage[capitalise,noabbrev]{cleveref}
+
+%%%% for xy-hyper
+\makeatletter
+\newcommand*{\addFileDependency}[1]{% argument=file name and extension
+  \typeout{(#1)}
+  \@addtofilelist{#1}
+  \IfFileExists{#1}{}{\typeout{No file #1.}}
+}
+\makeatother
+ 
+\newcommand*{\myexternaldocument}[2][]{%
+    \externaldocument[#1]{#2}%
+    \addFileDependency{#2.tex}%
+    \addFileDependency{#2.aux}%
+}
+
+%%%% for showkey of cleveref
+% \makeatletter
+%   \SK@def\Cref#1{\SK@\SK@@ref{#1}\SK@Cref{#1}}%
+%   \SK@def\cref#1{\SK@\SK@@ref{#1}\SK@cref{#1}}%
+% \makeatother
+
+% \definecolor{refkey}{rgb}{0.9451,0.2706,0.4941}
+% \definecolor{labelkey}{rgb}{0.9451,0.2706,0.4941}
+
+%%%% for tikz
+\usetikzlibrary{positioning}
+
+%%%% for cleveref
+\crefname{equation}{}{}
+
+\theoremstyle{plain}
+%\theoremstyle{definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{definition}{Definition}
+\newtheorem{remark}{Remark}
+\newtheorem{example}{Example}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proof}{Proof}
+\renewcommand{\theproof}{}
+
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{claim}{Claim}
+\newtheorem{lem}{Lemma}[section]
+\newtheorem{prop}{Proposition}[section]
+\newtheorem{cor}{Corollary}[section]
+\newtheorem{defn}{Definition}[section]
+\newtheorem{exmp}{Example}[section]
+%\renewcommand*{\proofname}{Proof}
+
+%%%% commands
+\newcommand{\norm}[1]{\left\| #1 \right\|}
+\newcommand{\abs}[1]{\left| #1 \right|}
+\newcommand{\card}[1]{\left| #1 \right|}
+\newcommand{\paren}[1]{\left( #1 \right)}
+\newcommand{\sqbra}[1]{\left[#1 \right]}
+\newcommand{\inprod}[2]{\left\langle #1,\ #2 \right\rangle}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\diff}{\mathrm{d}}
+\newcommand{\ZZ}{\Sigma}
+
+\DeclareMathOperator{\rank}{rank}
+
+\newcommand{\argmax}{\mathop{\rm arg~max}\limits}
+\newcommand{\argmin}{\mathop{\rm arg~min}\limits}
+
+
+\frenchspacing  %Required
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to LaTeX to determine where to break the
+% lines. Using \AND forces a line break at that point. So, if LaTeX puts 3 of 4
+% authors names on the first line, and the last on the second line, try using
+% \AND instead of \And before the third author name.
+
+\author{%
+  Akinori ~Tanaka%\thanks{Use footnote for providing further information
+    %about author (webpage, alternative address)---\emph{not} for acknowledging
+    %funding agencies.}
+    \\
+  RIKEN AIP, Keio University\\
+  \texttt{akinori.tanaka@riken.jp} \\
+  % examples of more authors
+   \And
+   Akiyoshi Sannai \\
+   RIKEN AIP, Keio University\\
+   \texttt{akiyoshi.sannai@riken.jp} \\
+   \AND
+   Ken Kobayashi \\
+   Fujitsu Laboratories LTD., RIKEN AIP, Tokyo Tech\\
+   \texttt{ken-kobayashi@fujitsu.com} \\
+   \And
+   Naoki Hamada \\
+   Fujitsu Laboratories LTD., RIKEN AIP\\
+   \texttt{hamada-naoki@fujitsu.com} \\
+   %\And
+   %Coauthor \\
+   %Affiliation \\
+   %Address \\
+   %\texttt{email} \\
+}

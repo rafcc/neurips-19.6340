@@ -1,0 +1,712 @@
+\documentclass{article}
+\input{preamble}
+\myexternaldocument[apnd:]{appendix}
+\title{Asymptotic Risk of B\'ezier Simplex Fitting}
+\begin{document}
+\maketitle
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{abstract}
+The B\'ezier simplex fitting is a novel data modeling technique which exploits geometric structures of data to approximate the Pareto front of multi-objective optimization problems.
+There are two fitting methods based on different sampling strategies.
+The \emph{inductive skeleton fitting} employs a stratified subsampling from each skeleton of a simplex, whereas the \emph{all-at-once fitting} uses a non-stratified sampling which treats a simplex as a whole.
+In this paper, we analyze the asymptotic risks of those B\'ezier simplex fitting methods and derive the optimal subsample ratio for the inductive skeleton fitting.
+It is shown that the inductive skeleton fitting with the optimal ratio has a smaller risk when the degree of a B\'ezier simplex is less than three.
+Those results are verified numerically under small to moderate sample sizes.
+In addition, we provide two complementary applications of our theory: a generalized location problem and a multi-objective hyper-parameter tuning of the group lasso.
+The former can be represented by a B\'ezier simplex of degree two where the inductive skeleton fitting outperforms.
+The latter can be represented by a B\'ezier simplex of degree three where the all-at-once fitting gets an advantage.
+\end{abstract}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+Given functions $f_1,\dots,f_M: X \to \R$ on a subset $X$ of the Euclidean space $\R^N$, consider the multi-objective optimization problem
+\[
+\text{minimize } f(x) := (f_1(x), \dots, f_M(x)) \text{ subject to } x \in X (\subseteq \R^N)
+\]
+with respect to the Pareto ordering: $x \prec y \xLeftrightarrow{\mathrm{def}} \forall i \sqbra{f_i(x) \leq f_i(y)} \land \exists j \sqbra{f_j(x) < f_j(y)}$.
+The goal is to find the \emph{Pareto set} and its image, called the \emph{Pareto front}, which are denoted by
+\[
+X^*(f) := \Set{x \in X | \forall y \in X \sqbra{y \not\prec x}}
+\quad \text{and} \quad
+f(X^*(f)) := \Set{f(x) \in \R^M | x \in X^*(f)},
+\]
+respectively.
+Since most numerical optimization approaches give a finite number of points as an approximation of those objects (e.g., goal programming \cite{Miettinen1999,Eichfelder2008}, evolutionary computation \cite{Deb2001,Zhang2007,Deb2014}, homotopy methods \cite{Hillermeier2001,Harada2007}, Bayesian optimization \cite{Hernandez-Lobato2016,Yang2019}), the complete shapes of them are usually not revealed.
+To amplify the knowledge extracted from their point approximations, we consider in this paper a fitting problem of the Pareto set and front.
+
+It is known that those objects often have skeleton structures that can be used to enhance fitting accuracy.
+An $M$-objective problem is \emph{simplicial} if the Pareto set and front are homeomorphic to an $(M-1)$-dimensional simplex and each $(m-1)$-dimensional subsimplex corresponds to the Pareto set of an $m$-objective subproblem for all $0 \le m \le M$ (see \cite{Hamada2019} for precise definition and examples).
+There are a lot of practical problems being simplicial: location problems \cite{Kuhn1967} and a phenotypic divergence model in evolutionary biology \cite{Shoval2012} are shown to be simplicial, and an airplane design \cite{Mastroddi2013} and a hydrologic modeling \cite{Vrugt2003} hold numerical solutions which imply those problems are simplicial.
+The Pareto set and front of any simplicial problem can be approximated with arbitrary accuracy by a B\'ezier simplex of an appropriate degree~\cite{Kobayashi2019}.
+There are two fitting algorithms for B\'ezier simplices: the all-at-once fitting is a na\"ive extension of Borges-Pastva algorithm for B\'ezier curves~\cite{Borges2002}, and the inductive skeleton fitting~\cite{Kobayashi2019} exploits the skeleton structure of simplicial problems discussed above.
+
+An important problem class which is (generically) simplicial is the strongly convex problem.
+It has been shown that many practical problems can be considered as strongly convex via appropriate transformations preserving the essential problem structure, i.e., the Pareto ordering and the topology~\cite{Hamada2019}.
+For example, the multi-objective location problem \cite{Kuhn1967} can be strongly convex by squaring each objective function.
+The resulting problem has a Pareto front that can be represented by a B\'ezier simplex of degree two \cite{Hamada2019}.
+As we will show in this paper, the group lasso \cite{Yuan2006} can be reformulated as a simplicial problem.
+It has a cubic Pareto front that requires a B\'ezier simplex of degree three.
+The same transformation can be applied to a broad range of sparse learning methods, including the (original) lasso \cite{Tibshirani1996}, the fused lasso \cite{Tibshirani2005}, the smooth lasso \cite{Hebiri2011}, and the elastic net \cite{Zou2005}.
+Since the required degree is problem-dependent, we need to understand the performance of the two B\'ezier simplex fittings with respect to the degree.
+
+In this paper, we study the asymptotic risk of the two fitting methods of the B\'ezier simplex: the all-at-once fitting and the inductive skeleton fitting, and compare their performance with respect to the degree.
+
+Our contributions are as follows:
+\begin{itemize}
+\item We have evaluated the asymptotic $\ell_2$-risk, as the sample size tends to infinity, of two B\'ezier simplex fitting methods: the all-at-once fitting and the inductive skeleton fitting.
+\item In terms of minimizing the asymptotic risk, we have derived the optimal ratio of subsample sizes for the inductive skeleton fitting.
+\item We have shown when the inductive skeleton fitting with optimal ratio outperforms the all-at-once fitting when the degree of a B\'ezier simplex is two, whereas the all-at-once has an advantage at degree three.
+\item We have demonstrated that the location problem and the group lasso are transformed into strongly convex problems, and their Pareto fronts are approximated by a B\'ezier simplex, which numerically verifies the asymptotic results.
+\end{itemize}
+
+The rest of this paper is organized as follows:
+\cref{sec:problem-definition} describes the problem definition.
+\Cref{sec:asymptotic-risk} analyzes the asymptotic risks of the all-at-once fitting and the all-at-once fitting.
+For the inductive skeleton fitting, the optimal subsample ratio in terms of minimizing the risk is derived.
+Those analyses are verified in \cref{sec:numerical-examples} via numerical experiments.
+\Cref{sec:conclusion} concludes the paper and addresses future work.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Problem definition}\label{sec:problem-definition}
+Let $M$ be a non-negative integer.
+The \emph{standard $(M - 1)$-simplex} is defined by
+\[
+\Delta^{M - 1} = \Set{(w_1, \dots, w_M) \in \R^M | \sum_{m = 1}^M w_m = 1,\ w_m \geq 0}.
+\]
+For an index set $I \subseteq \set{1, \dots, M}$, we define the \emph{$I$-subsimplex} of $\Delta^{M - 1}$ by $\Delta^I = \set{(w_1, \dots, w_M) \in \Delta^{M - 1} | w_m = 0\ (m \not \in I)}$.
+For an integer $0 \leq m \leq M$, the \emph{$(m - 1)$-skeleton} of $\Delta^{M - 1}$ is defined by
+\[
+\Delta^{(m-1)} = \bigcup_{I \subseteq \set{1, \dots, M} \text{ s.t. } \card{I}=m} \Delta^{M-1}_I.
+\]
+
+\subsection{B\'ezier simplex and its fitting methods}\label{sec:bezier-simplex}
+Let $\N$ be the set of non-negative integers (including zero!) and $M, D \in \N$.
+We denote a simplex lattice by $\N_D^M := \set{(d_1,\dots,d_M) \in \N^M | \sum_{m=1}^M d_m = D}$.
+Given the \emph{control points} $\bm p_{\bm d} \in \R^L$ $(\bm d \in \N_D^M)$, an \emph{$(M - 1)$-B\'ezier simplex of degree $D$} is a mapping $\bm b(\bm t): \Delta^{M-1}\to\R^L$ defined by
+\begin{equation}\label{eqn:bezier-simplex}
+\bm b(\bm t) := \sum_{\bm d\in\N_D^M} \binom{D}{\bm d} \bm t^{\bm d} \bm p_{\bm d}
+\end{equation}
+where $\binom{D}{\bm d} := \frac{D!}{d_1! d_2! \cdots d_M!}$, and for each $\bm t := (t_1, \dots, t_M) \in \R^M$ and $\bm d := (d_1, \dots, d_M) \in \N^M$, $\bm t^{\bm d}$ is a monomial $t^{d_1}_1 t^{d_2}_2 \cdots t^{d_M}_M$.
+
+Kobayashi \text{et al.} \cite{Kobayashi2019} proposed two B\'ezier simplex fitting algorithms: the all-at-once fitting and the inductive skeleton fitting.
+They are different in not only fitting algorithm but also sampling strategy.
+The all-at-once fitting requires a training set $S_N:=\set{(\bm t_n, \bm x_n) \in \Delta^{M-1} \times \R^L | n = 1, \dots, N}$ and adjusts all control points at once by minimizing the ordinary least square loss: $\frac{1}{N}\sum_{n=1}^N \norm{\bm x_n - \bm b(\bm t_n^{(m)})}^2$.
+
+The inductive skeleton fitting, on the other hand, requires skeleton-wise sampled training sets $S_{N^{(m)}} := \set{(\bm t^{(m)}_n, \bm x^{(m)}_n) \in \Delta^{(m)} \times \R^L | n = 1, \dots, N^{(m)}}~(m=0,\ldots,M-1)$.
+It also divides control points as $\bm p_{\bm d}^{(m)}$ such that $\bm d$ has $m+1$ non-zero elements.
+Such $\bm p_{\bm d}^{(m)}$ determine $m$-skeleton of a B\'ezier simplex.
+The inductive skeleton fitting inductively adjusts $\bm p_{\bm d}^{(m)}$ from $m = 0$ to $M - 1$ by minimizing the ordinary least square loss of the $m$-skeleton $\frac{1}{N^{(m)}}\sum_{n=1}^{N^{(m)}} \norm{\bm x^{(m)}_n - \bm b(\bm t_n)}^2$.
+
+\subsection{The \texorpdfstring{$\ell_2$}{l2}-risk}
+The fitting problem considered in this paper is as follows.
+The sample is taken from an unknown B\'ezier simplex $\bm b(\bm t): \Delta^{M-1} \to \R^L$ with additive Gaussian noise $\bm \varepsilon \sim N(\bm 0, \sigma^2 \bm I)$, that is, $\bm x = \bm b(\bm t) + \bm \varepsilon$.
+For the all-at-once fitting, $S_N = \set{(\bm t_n, \bm x_n)}$ follows the uniform distribution on the domain of the B\'ezier simplex: $\bm t_n \sim U(\Delta^{M-1})$ and $\bm x_n = \bm b(\bm t_n) + \bm \varepsilon_n$.
+For the inductive skeleton fitting, $S_{N^{(m)}} = \set{(\bm t_n^{(m)}, \bm x_n^{(m)})}$ follows the uniform distribution on the $m$-skeleton of the domain of the B\'ezier simplex: $\bm t_n^{(m)} \sim U(\Delta^{(m)})$ and $\bm x_n^{(m)} = \bm b(\bm t_n^{(m)}) + \bm \varepsilon_n^{(m)}$.
+A B\'ezier simplex estimated from $S_N$ is denoted by $\bm{\hat b}(\bm t | S_N)$.
+For both method, we asymptotically evaluate the $\ell_2$-risk below as $N \to \infty$.
+\begin{equation}\label{eqn:risk-def}
+R_N := \E_{S_N}\sqbra{\E_{\bm t \sim U(\Delta^{M-1})} \norm{\bm b(\bm t) - \hat{\bm b}(\bm t | S_N)}^2}.
+\end{equation}
+Here, we put $S_N = S_{N^{(0)}} \cup \dots \cup S_{N^{(M-1)}}$ for the inductive skeleton fitting.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Asymptotic risk of B\'ezier simplex fitting}\label{sec:asymptotic-risk}
+To calculate the risk of each fitting scheme, let us first focus on the fact: the summation/subtraction of two B\'ezier simplices is also B\'ezier simplex.
+In the definition \cref{eqn:risk}, we have $\bm b(\bm t) - \hat{\bm b}(\bm t | S_N)$ which measures the difference between the target B\'ezier simplex and the model B\'ezier simplex.
+By using the above fact, $\bm b(\bm t) - \hat{\bm b}(\bm t | S_N)$ is also B\'ezier simplex.
+Let us call its control point as $\bm p'$, and consider the following matrix,
+\begin{align}
+\bm P
+=
+\begin{bmatrix}
+(\bm p_1')_1 &
+(\bm p_1')_2 & 
+\cdots &
+(\bm p_1')_L 
+\\
+(\bm p_2')_1 &
+(\bm p_2')_2 & 
+\cdots &
+(\bm p_2')_L 
+\\
+\quad \vdots&
+\quad \vdots & 
+\ddots &
+\quad \vdots
+\\
+(\bm p_{\card{\N_D^M}}')_1 &
+(\bm p_{\card{\N_D^M}}')_2 & 
+\cdots &
+(\bm p_{\card{\N_D^M}}')_L 
+\end{bmatrix}
+,
+\end{align}
+where $(\bm p_A)_{l}$ means the $l$-th component of the $A$-th control point vector $\bm p_A$.
+%%%
+The asymptotic rick can be calculated by the following theorem.
+\begin{theorem}\label{thm:risk}
+The risk of the B\'ezier simplex fitting can be represented by
+\begin{align}
+R_N
+=
+\sum_{\bm d_A, \bm d_B \in \mathbb{N}_D^M}
+\ZZ_{AB}
+\E_{S_N} \sqbra{({\bm P} {\bm P}^\top)_{AB}}
+,
+\label{eqn:risk}
+\end{align}
+where the matrix $\ZZ$ is defined by
+\begin{align}
+\ZZ_{AB}
+=
+\frac{(2D)!(M-1)!}{(2D+M-1)!}
+  \binom{D}{\bm d_A}
+  \binom{D}{\bm d_B}
+  \binom{2D}{\bm d_A + \bm d_B}^{-1}
+  \label{eqn:ZZ-def}
+\end{align}
+\end{theorem}
+The proof is provided in the supplementary materials (\cref{apnd:sec:proof-of-main-theorem}).
+Once the set of parameters of the system, including the simplex dimension $M$, degree of the B\'esier simplex $D$, the dimension of the target data $L$, the amplitude of the noise $\sigma$, is fixed, the equation \cref{eqn:risk} says that the asymptotic value of this risk function depends only on how we choose the matrix $\bm P$.
+We calculate the asymptotic form of the risk \cref{eqn:risk} with $\bm P$ determined from the all-at-once (AAO) fitting and the inductive-skeleton (ISK) fitting.
+We call them $\bm P_\mathrm{AAO}$ and $\bm P_\mathrm{ISK}$ respectively.
+
+\subsection{All-at-once fitting}\label{sec:all-at-once-fitting}
+\paragraph{Samples and determined control points}
+Let us recall the sample $S_N$ consists of elements $(\bm t_n, \bm x_n) \in \Delta^{M-1} \times \R^L$ with $\bm x_n = \bm b(\bm t_n) + \bm \varepsilon_n$ and $\bm t_n \sim U(\Delta^{M-1})$, $\bm \varepsilon_n \sim N(0, \sigma^2 \bm I)$ for $n = 1, \dots, N$.
+The matrix $\bm P_\mathrm{AAO}$ is determined by minimization of the OLS error below
+\begin{align}
+\frac 1 N \sum_{n=1}^N \norm{\bm x_n - \hat{\bm b}(\bm t_n)}^2 
+%&= \frac 1 N \sum_{n=1}^N \norm{\sum_{\bm d\in\N_D^M} \binom{D}{\bm d}\bm t_n^{\bm d}  \bm p'_{\bm d} + \bm \varepsilon_n}^2\notag\\
+&= \frac 1 N \norm{ \bm Z \bm P + \bm Y }_{\mathrm F}^2, \label{eqn:rss}
+\end{align}
+where $\norm{\cdot}_\mathrm{F}$ means the Frobenius norm and
+$\bm z_n = [\text{a vector with component } \binom{D}{\bm d}\bm t_n^{\bm d}~(\bm d\in \N_D^M)] \in \R^{\card{\N_D^M}}$, $\bm Z = \sqbra{\bm z_1 \bm z_2 \cdots \bm z_N}^\top \in \R^{N \times \card{\N_D^M}}$, $\bm Y = \sqbra{\bm \varepsilon_1 \bm \varepsilon_2\cdots \bm \varepsilon_N}^\top \in \R^{N \times L}$.
+In this notation, the optimum takes well known form: $\bm P_\mathrm{AAO} = -\paren{\bm Z^\top \bm Z}^{-1}\bm Z^\top \bm Y$.
+Note that the regularity of the matrix $\bm Z^\top \bm Z$ is guaranteed by taking a sufficiently large number of samples $S_N$, or more precisely $\set{\bm t_n}_{n = 1, \dots, N}$.
+
+%%%
+\paragraph{Calculation of the asymptotics}
+To calculate the risk asymptotics \cref{eqn:risk} in the all-at-once fitting, we need to calculate asymptotic values of expectation values of the matrix $\bm P_\mathrm{AAO} \bm P_\mathrm{AAO}^\top$ over $S_N$.
+%
+The first observation is that the contribution from the noise matrix $\bm Y$ is only located at the middle of the sequence of matrix product $\bm P_\mathrm{AAO} \bm P_\mathrm{AAO}^\top = \paren{\bm Z^\top \bm Z}^{-1}\bm Z^\top \bm Y \bm Y^\top \bm Z \paren{\bm Z^\top \bm Z}^{-1}$.
+If $\bm Y \bm Y^\top \propto 1_N$, the calculation reduces very simple form.
+In fact, we can perform it by decomposing $\E_{S_N}$ to $\E_{\bm t_n} \E_{\bm \varepsilon_n}$.
+After taking expectation value $\E_{\bm \varepsilon_n}$,
+we get
+\begin{align}
+\E_{S_N} \sqbra{\bm P_\mathrm{AAO} \bm P_\mathrm{AAO}^\top}
+&= %%%%
+\sigma^2 L \cdot
+\E_{\bm t_n} \sqbra{
+\paren{\bm Z^\top \bm Z}^{-1}
+}
+.
+\label{eqn:P_AAO-P_AAO}
+\end{align}
+The prefactor $\sigma^2 L$ results from taking expectation over the noise.
+Here, $L$ is the dimension of the space control points lived in.
+%
+Now, the only remaining task is the estimation of the asymptotic behavior of the matrix $(\bm Z^\top \bm Z)$.
+%
+A key observation is that each element of this matrix is an average over the samples $\bm t_n$:
+\begin{align}
+\frac{1}{N}
+\paren{\bm Z^\top \bm Z}_{AB}
+=
+\binom{D}{\bm d_A}
+\binom{D}{\bm d_B}
+\sum_{n=1}^N 
+\frac{1}{N}
+\bm t_n^{\bm d_A + \bm d_B}
+.
+\end{align}
+In fact, it converges to the matrix $\ZZ_{AB}$ defined in \cref{eqn:ZZ-def} as $N \to \infty$.
+Therefore, by using the law of large numbers, we can get 
+$
+\paren{\bm Z^\top \bm Z}_{AB}
+\overset{p}{\to}
+N \ZZ_{AB}.
+$
+To substitute it to \cref{eqn:P_AAO-P_AAO}, we need to guarantee $\ZZ_{AB}$ has the inverse matrix, i.e.
+\begin{theorem}\label{thm:sigma-is-non-singular}
+For any $D, M$, the matrix $\ZZ_{AB}$ in \cref{eqn:ZZ-def} is non-singular.
+\end{theorem}
+The proof is given in the supplementary materials (\cref{apnd:sec:proof-of-regularity}).
+Just by replacing $(\bm Z^T \bm Z)$ to $N \ZZ$, we arrive at the asymptotic form of the risk.
+In addition to it, we can further simplify the result by using: $\sum_{AB} \ZZ_{AB}
+\ZZ^{-1}_{AB} = \ _{D+M-1} C_D$, which is relatively easy to show (see \cref{apnd:sec:derivation-of-sum} in the supplementary materials).
+\if0
+\footnote{
+Let $\tilde{\ZZ}$ be a cofactor matrix and $C_{AB}$ be a $(A, B)$ minor of $\ZZ$.
+\begin{equation*}
+\begin{split}
+\sum_{A, B} \ZZ_{AB} \ZZ_{AB}^{-1}
+    &= \sum_{A,B} \left(\frac{1}{\det(\ZZ)}\tilde{\ZZ} \circ \ZZ\right)_{AB} %\\
+    %&= \frac{1}{\det(A)}\sum_{i, j = 1}^N (\tilde{A}\circ A)_{ij} \\
+    %&
+    = \frac{1}{\det(\ZZ)}\sum_{A,B} \ZZ_{AB}C_{AB} \\
+    &= \frac{1}{\det(\ZZ)}\sum_{A}^{} \det(\ZZ)
+    =  \ _{D+M-1} C_D.
+\end{split}
+\end{equation*}
+From 1st line to 2nd line, we use the definition of the determinant of $\ZZ$.
+}
+\fi
+
+In summary, our formula for the asymptotic form of the risk for the all-at-once fitting is
+\begin{align}
+R_N \overset{p}{\to}
+\frac{\sigma^2 L}{N}
+\sum_{A, B}
+\ZZ_{AB}
+\ZZ^{-1}_{AB}
+=
+\frac{\sigma^2 L}{N}
+\ _{D+M-1} C_D \quad \text{as $N \to \infty$}.
+\label{eqn:risk-all-at-once}
+\end{align}
+
+%%
+\subsection{Inductive skeleton fitting}\label{sec:inductive-skeleton-fitting}
+Before showing the asymptotic form of the risk for the inductive skeleton fitting, it would be better to introduce some notations here.
+To treat subsimplices of the simplex $\Delta^{M-1}$, it is useful to notice that there is a one-to-one correspondence between a subsimplex and $M$-dimensional binary vector:
+\begin{align}
+\text{a subsimplex of $\Delta^{M-1}$}
+\quad
+\Longleftrightarrow
+\quad
+\bm I = [I_1, I_2, \dots, I_M], \quad
+I_i \in \Set{0, 1}, \quad
+\bm I \neq \bm 0.
+\end{align}
+In this notation, $\Delta^{M-1}$ itself is identified to $[1,1, \dots, 1]$.
+The sum $\card{\bm I} = \sum_{i=1,2, \dots, M} I_i$ provides the dimension + 1 of the corresponding subsimplex.
+We call a subsimplex indexed by $\bm I$ as $\Delta^{\bm I}$ from now on.
+In addition, it is useful to define notation for the set of all $(m-1)$-dimensional subsimplices:
+\begin{align}
+(m) = \text{all $(m)$-dimensional subsimplices of $\Delta^{M-1}$}
+=
+\cup_{\card{\bm I} = m+1} \Delta^{\bm I}
+,
+\end{align}
+and we call corresponding control point submatrices as $\bm P^{(m)}$.
+%
+
+\paragraph{Samples and determined control points}
+In this notation, we can state that the inductive skeleton fitting is an inductive procedure of determining control points matrices $\bm P^{(m)}$ from low $m=0, 1, \dots, M-1$.
+%
+Suppose all $\set{\bm P^{(k)}}_{k < m}$ are already fixed and the samples on $\cup_{\card{\bm I} = m} \Delta^{\bm I}$,
+$S_{N^{(m)}} = \set{(\bm t_1^{(m)}, \bm x_1^{(m)}), \dots, (\bm t_{N^{(m)}}^{(m)}, \bm x_{N^{(m)}}^{(m)})}$ are provided from
+${\bm t}_n^{(m)} \sim U(\cup_{\card{\bm I} = m+1} \Delta^{\bm I})$.
+The $m$-th submatrix $\bm P^{(m)}$ is determined by minimizing the OLS error
+\begin{align}
+%&\frac{1}{N^{(m)}}
+%\sum_{n = 1}^{N^{(m)}}
+%\norm{ {\bm x}_{n}^{(m)} - 
+%\hat{\bm b} ({\bm t}_{n}^{(m)}) }^2
+%\notag \\
+%&= %%%%
+&
+\frac{1}{N^{(m)}}
+\sum_{n = 1}^{N^{(m)}}
+\norm{
+\bm x_n^{(m)}
+-
+\hat{\bm b}(\bm t_n^{(m)})
+}^2\label{eqn:OLS}
+\end{align}
+Note that there is no need to take any control point on $\Delta^{\bm J}$ with $\card{\bm J} > m$ into account because each $\bm t_n^{(m)}$ is on $\Delta^{\bm I}$ with $\card{\bm I} = m+1$ and there is no contribution to $\hat{\bm b}(\bm t_n^{(m)})$ from such higher dimensional control point.
+In addition, we regard lower dimensional control points already fixed, so the net objective control points are ones included in $\bm P^{(m)}$.
+By repeating similar procedure done in the all-at-once fitting, we can conclude $\bm P^{(m)}$ is determined as
+\begin{align}
+{\bm P}_\mathrm{OLS}^{(m)}
+= %%%%
+-
+[({\bm Z}^{(m)})^\top {\bm Z}^{(m)}]^{-1}
+({\bm Z}^{(m)})^\top 
+\paren{
+{\bm Y}^{(m)}
++
+\sum_{k < m}
+{\bm Z}^{(m) [k]}
+{\bm P}_\mathrm{OLS}^{(k)}
+}
+\label{eqn:P_OLS}
+\end{align}
+where
+$
+{\bm z}_{n}^{(m)[k]}
+=
+\sqbra{\text{a vector with component }
+({\bm z}_{n}^{(m)})^{{\bm d}^{(k)}}
+}$,
+$
+{\bm Z}^{(m) [k]}
+=
+\sqbra{{\bm z}_1^{(m) [k]}
+ \bm{z}_2^{(m) [k]}
+ \cdots 
+ {\bm z}_{N^{(m)}}^{(m) [k]}}^\top$,
+$
+{\bm Y}^{(m)}
+=
+\sqbra{{\bm \varepsilon}_1^{(m)} \bm{\varepsilon}_2^{(m)} \cdots {\bm \varepsilon}_{N^{(m)}}^{(m)}}^\top
+.
+$
+%%%
+
+\paragraph{Calculation of the asymptotics}
+We get ${\bm P_\mathrm{ISK}} {\bm P_\mathrm{ISK}}^\top
+=
+\oplus_{i, j=0}^{M-1}
+{\bm P}^{(i)}_\mathrm{OLS}
+({\bm P}^{(j)}_\mathrm{OLS})^\top
+$ which we need to compute the risk \cref{eqn:risk}.
+%This matrix is determined from lower sub matrices.
+%
+As one might notice, the risk for the inductive-skeleton fitting depends on each number of $(m)$-dimensional subsamples $N^{(m)}$.
+We will determine the best combination of $N^{(m)}$ constrained on $\sum_m N^{(m)} = N$ later.
+Here, we treat the risk depending not $N$ but every $N^{(m)}$ and call it as
+$
+R_{N^{(0)}, N^{(1)}, \dots, N^{(M-1)}}
+$.
+%
+To calculate $\E_{S_N} [\bm P_{ISK} \bm P_{ISK}^\top]$, we again take expectation over noise.
+Thanks to $\E [\bm Y^{(m)} (\bm Y^{(n)})^\top ] = \sigma^2 L \bm 1_{N^{(m)}}$ or $\bm 0$ depending on $m=n$ or not, and the central limit with respect to $\bm z_n$, one can get
+\begin{align}
+&\E_{ S_N }
+\sqbra{
+{\bm P}^{(i)}_\mathrm{OLS}
+({\bm P}^{(j)}_\mathrm{OLS})^\top
+}
+\notag \\
+&\overset{p}{\to}
+\sigma^2 L
+\sum_{
+\substack{
+m \leq i
+\\
+m \leq j
+}}
+\sum_{
+\substack{
+m \leq k_1 < \dots < k_{\heartsuit} < i
+\\
+m \leq l_1 < \dots < l_{\spadesuit} < j
+}
+}
+\frac{(-1)^{\heartsuit + \spadesuit}}{N^{(m)}}
+%\notag \\ \nline \quad \times %\qquad %\qquad
+{\bm \Lambda}_{(i)}
+{\bm \Lambda}^{(i)[k_{\heartsuit}]}
+{\bm \Lambda}_{(k_{\heartsuit} )}
+%\hat{\bm \Lambda}^{(k_{\#_i})[k_{\#_i -1}]}
+\cdots
+{\bm \Lambda}^{(k_1)[m]}
+{\bm \Lambda}_{(m)}
+{\bm \Lambda}^{[m](l_1)}
+\cdots
+{\bm \Lambda}_{(l_{\spadesuit} )}
+{\bm \Lambda}^{[l_{\spadesuit}](j)}
+{\bm \Lambda}_{(j)}
+\label{eqn:P_OLS-P_OLS}
+\end{align}
+after substituting the recursive formula \cref{eqn:P_OLS} repeatedly, where
+\begin{align}
+&({\bm \Lambda}^{(m)[k]})_{ \bm d ^{(m)} \bm d ^{(k)} }
+%\notag \\
+= %%%%
+\frac{(m-1)!}{\ _{M} C_m}
+\begin{pmatrix}
+D \\
+{\bm d}^{(m)}
+\end{pmatrix}
+%
+\begin{pmatrix}
+D \\
+{\bm d}^{(k)}
+\end{pmatrix}
+%
+\sum_{ \card{I} = m }
+\frac{
+\delta_{{\bm I}, (\bm d ^{(m)} +  \bm d ^{(k)} )_{01} }
+\prod_{I_i = 1}( \bm d ^{(m)} +  \bm d ^{(k)}  )_i !}{
+[\sum_{I_i = 1} ( \bm d ^{(m)} +  \bm d ^{(k)}  )_i 
++ m - 1]!
+},
+\notag
+\\
+&
+{\bm \Lambda}^{[k](m)}
+=
+{\bm \Lambda}^{(m)[k]},
+\quad
+{\bm \Lambda}_{(m)}
+%\notag \\
+= 
+({\bm \Lambda}^{(m)[m]})^{-1}
+\label{eqn:Lamb}
+\end{align}
+and
+\begin{align}
+\delta_{{\bm I}, (\bm d ^{(m)} +  \bm d ^{(k)} )_{01} }
+&=
+\left\{ \begin{array}{ll}
+1 & ( {\bm I} = (\bm d ^{(m)} +  \bm d ^{(k)} )_{01}  ) \\
+0 & \text{otherwise}\\
+\end{array} \right.
+\end{align}
+For the complete derivation, see \cref{apnd:sec:risk-derivation} in the supplementary materials.
+We stop here and leave to get a closed formula for the asymptotics of the risk on inductive-skeleton fitting as future work.
+Instead, we calculate the asymptotic risk numerically by using \cref{eqn:P_OLS-P_OLS,eqn:risk} and obtain \cref{tab:risk-inductive}.
+%%
+\begin{table}[H]
+\centering
+\caption{Numerically computed asymptotic risks of the inductive skeleton fitting ($M$: dimension of B\'ezier simplex, $D$: degree of B\'ezier simplex, $N^{(m)}$: sample size of $(m)$-skeleton).}\label{tab:risk-inductive}
+\begin{tabular}{l|ll} \toprule
+$R_{N^{(0)}, N^{(1)}, \dots}$ &
+$D = 2$ &
+$D = 3$
+\\ \midrule
+$M = 2$ &
+$1.0 / N^{(1)} + 0.5 / N^{(0)}$ &
+$2.0 / N^{(1)} + 0.2666 / N^{(0)}$
+\\
+$M = 3$ &
+$3.0 / N^{(1)} + 0.375 / N^{(0)}$ &
+$1.0 / N^{(2)} + 3.535 / N^{(1)} + 0.1464 / N^{(0)}$
+\\
+$M = 4$ &
+$5.142 / N^{(1)} + 0.4571 / N^{(0)}$ &
+$5.333 / N^{(2)} + 4.714 / N^{(1)} + 0.1650 / N^{(0)}$
+\\
+$M = 5$ &
+$7.142 / N^{(1)} + 0.625 / N^{(0)}$ &
+$13.33 / N^{(2)} + 6.666 / N^{(1)} + 0.2083 / N^{(0)}$
+\\
+$M = 6$ &
+$8.928 / N^{(1)} + 0.8214 / N^{(0)}$ &
+$24.24 / N^{(2)} + 9.740 / N^{(1)} + 0.2575 / N^{(0)}$
+\\
+$M = 7$ &
+$10.5 / N^{(1)} + 1.020 / N^{(0)}$ &
+$37.12 / N^{(2)} + 13.84 / N^{(1)} + 0.3119 / N^{(0)}$
+\\
+$M = 8$ &
+$11.87 / N^{(1)} + 1.212 / N^{(0)}$ &
+$51.17 / N^{(2)} + 18.73 / N^{(1)} + 0.3723 / N^{(0)}$
+\\ \bottomrule
+\end{tabular}
+\end{table}
+
+%%
+\subsection{All-at-once vs Inductive skeleton}\label{sec:all-vs-inductive}
+\Cref{tab:risk-inductive} tells the risk of the inductive skeleton fitting depends on subsample sizes $N^{(m)}$.
+Given total sample size $N$, we can minimize the risk by finding the optimally-decoupled subsample sizes:
+\begin{align}
+    R_N := \min_{N^{(0)}, \dots, N^{(M-1)}} \Set{R_{N^{(0)}, \dots, N^{(M-1)}}} \text{ subject to } \sum_{m=0}^{M-1} N^{(m)} = N.
+\end{align}
+We calculated optimal risks for all cases shown in \cref{tab:risk-inductive} and compared them to the risks of the all-at-once fitting.
+\Cref{tab:risk-comparison} shows the results.
+\begin{table}[H]
+\centering
+\caption{Comparison of asymptotic risks of the all-at-once $R_N^\mathrm{AAO}$ vs the inductive skeleton with the optimal subsample ratio $R_N^\mathrm{ISK}$ ($M$: dimension of B\'ezier simplex, $D$: degree of B\'ezier simplex, $N$: sample size). The winner is shown in bold.}\label{tab:risk-comparison}
+\begin{tabular}{l|ll|ll} \toprule
+& \multicolumn{2}{c|}{$D = 2$} & \multicolumn{2}{c}{$D = 3$} \\ 
+& $R_{N}^\mathrm{AAO}$ & $R_N^\mathrm{ISK}$
+& $R_{N}^\mathrm{AAO}$ & $R_N^\mathrm{ISK}$
+\\ \midrule
+$M = 2$ &
+$3.0 / N$ &
+$\bm{2.91421} / N$ &
+$4.0 / N$ &
+$\bm{3.72726} / N$
+\\
+$M = 3$ &
+$6.0 / N$ &
+$\bm{5.49632} / N$ &
+$\bm{10.0} / N$ &
+$10.6472 / N$
+\\
+$M = 4$ &
+$10.0 / N$ &
+$\bm{8.66660} / N$ &
+$\bm{20.0} / N$ &
+$23.8821 / N$
+\\
+$M = 5$ &
+$15.0 / N$ &
+$\bm{11.9936} / N$ &
+$\bm{35.0} / N$ &
+$44.7548 / N$
+\\
+$M = 6$ &
+$21.0 / N$ &
+$\bm{15.1663} / N$ &
+$\bm{56.0} / N$ &
+$73.1387 / N$
+\\
+$M = 7$ &
+$28.0 / N$ &
+$\bm{18.0687} / N$ &
+$\bm{84.0} / N$ &
+$107.570 / N$
+\\
+$M = 8$ &
+$36.0 / N$ &
+$\bm{20.6799} / N$ &
+$\bm{120.0} / N$ &
+$146.206 / N$
+\\ \bottomrule
+\end{tabular}
+\end{table}
+
+As one can see, the optimum inductive skeleton fitting outperforms the all-at-once fitting in $D = 2$, but it is not always correct in $D = 3$.
+On $D = 2$, in fact, we can show that the minimum value of the inductive skeleton always less than the asymptotic risk of the corresponding all-at-one fitting.
+
+% \begin{proposition}
+% Let $N$ be a natural number and $a, b$ be positive real numbers. Let $f(x) = \frac{a}{x} + \frac{b}{N - x}$.
+% Assume $a > b$ and $\frac{a - \sqrt{ab}}{a - b} < 1$.
+% Then $\min \set{f(x) | x \in \R, 0 < x < N} = \frac{a + b + 2\sqrt{ab}}{N}$.
+% \end{proposition}
+
+% We notice that when $N$ is large, we can take an integer which is enough close to $\frac{a - \sqrt{ab}}{a - b}N$.
+
+\section{Numerical examples}\label{sec:numerical-examples}
+We examine the empirical performances of the all-at-once fitting and the inductive skeleton fitting and verify the asymptotic risks derived in \cref{sec:all-at-once-fitting,sec:inductive-skeleton-fitting} over synthetic instances and multi-objective optimization instances. 
+Experiment programs were implemented in Python 3.7.1 and run on a Windows 7 PC with an Intel Core i7-4790CPU (3.60 GHz) and 16 GB RAM.
+All experiments are reproducible by the source code and dependent libraries provided in the supplementary materials.
+
+\subsection{Synthetic instances}\label{sec:synthetic-instances}
+To verify the asymptotic risks derived in \cref{sec:all-at-once-fitting,sec:inductive-skeleton-fitting}, we consider the fitting problem where the true B\'ezier simplex $\bm b(\bm{t})~(\bm t \in \Delta^{M-1})$ is an $(M-1)$-dimensional unit simplex on $\R^L$, and randomly generate $N$ training points $\set{(\bm t_n, \bm x_n)}_{n = 1}^N$ as $\bm x_n = \bm b(\bm t_n) + \bm{\varepsilon}_n~(\bm \varepsilon_n \sim N(\bm 0, 0.1^2 \bm I))$.
+This synthetic instance is parameterized by a tuple $(L, M, N)$. 
+%A synthetic instance is generated as follows: given parameters $(\sigma, L, M, N)$, we randomly generated $N$ %parameters $\{\bm t_n\}_{n=1}^N$ on $\Delta^M$ for the all-at-once fitting and the inductive skeleton fitting respectively, and construct 
+%training points points , where $\bm x_n$ are defined as .
+The detailed data generation processes are shown in the supplementary materials (\cref{apnd:sec:numerical-experiments}).
+
+In this experiment, we estimated the B\'ezier simplex with degree $D = 2$ and 3, and compared the following three fitting methods:
+\begin{description}
+    \item[all-at-once] the all-at-once fitting (\cref{sec:all-at-once-fitting});
+    \item[inductive skeleton (non-optimal)] the inductive skeleton fitting (\cref{sec:inductive-skeleton-fitting}) with $N^{(0)} = \dots = N^{(M - 1)} = N / M$, which does not provide the optimal value of the risk \cref{tab:risk-inductive};
+    \item[inductive skeleton (optimal)] the inductive skeleton fitting (\cref{sec:inductive-skeleton-fitting}) where $N^{(0)}, \dots, N^{(M - 1)}$ are determined by minimizing the risk \cref{tab:risk-inductive} under the constraints $\sum_{m = 0}^{M-1} N^{(m)} = N$ and $N^{(m)}\geq 0~(m = 0, \dots, M-1)$. The actual sample size $N^{(m)}$ for each $(D, M)$ are shown in \cref{apnd:sec:numerical-experiments} (\cref{apnd:tab:optimal-subsample-ratio}).
+\end{description}
+When we calculated an approximation of the expected risk for each method, we randomly chose other 10000 parameters $\set{\bm{\hat t}_n}_{n = 1}^{10000}$ from $U(\Delta^{M - 1})$ as a test set and measured the mean squared error, $\mathrm{MSE} := \frac{1}{10000} \sum_{n = 1}^{10000} \norm{\bm b(\bm{\hat{t}}_n) - \bm{\hat{b}}(\bm{\hat{t}}_n)}^2$, where $\bm{\hat{b}}$ is the estimated B\'ezier simplex.
+We ran 20 trials and measured MSEs for each $(L, M, N)$ with $D \in \set{2, 3}$.
+
+Owing to space limitations, we only present typical results here. The remaining results are provided in the supplementary materials (\cref{apnd:sec:numerical-experiments}).
+\Cref{fig:MSE-vs-N} shows box plots of MSEs over 20 trials and our theoretical risks \cref{eqn:risk} and \cref{tab:risk-inductive} for each $N \in \set{250, 500, 1000, 2000}$ with $(L, M) = (100, 8)$ and $D \in \set{2, 3}$.
+We observe that these figures empirically show that our theoretical risks are correct for both $D = 2$ and 3, and the gap between the actual MSEs and the risks are sufficiently small at $N = 1000$. 
+For both $D = 2$ and 3, the inductive skeleton (optimal) always achieved lower MSEs than that of the inductive skeleton (non-optimal). 
+This result suggests the efficiency of minimizing the risk (\cref{tab:risk-comparison}) with respect to the sample size of each dimension. 
+In addition, the inductive skeleton fitting (optimal) also outperformed the all-at-once fitting in the case of $D = 2$. 
+This result also supports the discussion described in \cref{sec:all-vs-inductive}. 
+\begin{figure}[h]
+ \begin{minipage}{0.49\hsize}
+        \centering
+    \includegraphics[width=1\textwidth]{neurips2019/fig/D=2_M=8_L=100.pdf}
+    \subcaption{D=2}
+    \label{fig:MSE-vs-N-D=2}
+ \end{minipage}
+ \begin{minipage}{0.49\hsize}
+        \centering
+    \includegraphics[width=1\textwidth]{neurips2019/fig/D=3_M=8_L=100.pdf}
+    \subcaption{D=3}
+    \label{fig:MSE-vs-N-D=3}
+ \end{minipage}
+ \caption{Sample size $N$ vs. MSE with $(L, M) = (100, 8)$ (boxplots over 20 trials and theoretical risks).}
+ \label{fig:MSE-vs-N}
+\end{figure}
+
+\subsection{Multi-objective optimization instances}\label{sec:MOP-instances}
+To investigate our results practically, we provide two complementary multi-objective optimization problem instances: a generalized location problem called \texttt{MED} \cite{Harada2006,Hamada2010} and a multi-objective hyper-parameter tuning of the group lasso \cite{Yuan2006} on the \texttt{Birthwt} dataset \cite{Hosmer1989,Venables2002}.
+Both of them are strongly convex three-objective optimization problems and we consider fitting their two-dimensional (that is $M = L = 3$) Pareto fronts by a B\'ezier simplex with degree $D = 2$ and 3. % and evaluated the performances.
+For the location problem, its Pareto front can be represented by a B\'ezier simplex with degree $D = 2$.
+For the group lasso, on the other hand, the Pareto front cannot be represented with degree $D = 2$ but $D = 3$ (see \cref{apnd:sec:Pareto-fronts}).
+The detailed description of each problem is shown in \cref{apnd:sec:numerical-experiments}.
+
+As we conducted in the previous experiments, we generated a training set and a test set on a Pareto front randomly then fitted a B\'ezier simplex to the training set and evaluated the MSE between the estimated B\'ezier simplex and the test set. 
+We chose the number of training points to $N = 50$ and 100.
+With regard to the test set, the number of sample points is 10000 and 1000 for the location problem and the group lasso respectively. 
+We repeated experiments 20 times for each $(D, N)$.
+
+For each problem instance and method, the average and the standard deviation of the MSE are shown in \cref{tab:MSE-MOP-instances}. 
+In \cref{tab:MSE-MOP-instances}, we highlighted the best score of MSE out of all-at-once fitting and inductive skeleton fitting (optimal) and added the results of one-sided Student's t-test with significance level 0.05.
+
+\begin{table}[h]
+\caption{MSE (avg.\ $\pm$ s.d.\ over 20 trials) for the location problem and the group lasso. The winners with significance level $p < 0.05$ are shown in bold.}
+\label{tab:MSE-MOP-instances}
+\begin{minipage}[t]{.5\textwidth}
+    \centering
+    \subcaption{Location problem}
+    \scriptsize
+    {\tabcolsep = 1.5mm
+    \begin{tabular}{ccll}
+    \toprule
+$D$&$N$ & \multicolumn{1}{c}{All-at-once} & \multicolumn{1}{c}{Inductive-skeleton (optimal)}\\ \midrule
+%2&25	&3.582e-04 $\pm$	6.703e-05	&\textbf{3.126e-04 $\pm$	4.375e-05}$^{**}$\\
+2&50	&2.855e-04 $\pm$	2.114e-05	&\textbf{2.691e-04 $\pm$	8.541e-06}\\
+&100 &2.660e-04 $\pm$	1.227e-05	&\textbf{2.608e-04 $\pm$	5.946e-06}\\ \midrule
+%3&25	&7.502e-04 $\pm$	5.352e-04	&\textbf{4.626e-04 $\pm$	1.786e-04}$^{**}$\\
+3&50	&3.596e-04 $\pm$	7.935e-05	&3.269e-04 $\pm$	3.969e-05\\ 
+&100	&2.810e-04 $\pm$	1.569e-05	&2.796e-04 $\pm$	1.478e-05\\
+\bottomrule
+    \end{tabular}
+    }
+    \label{tab:location-problem}
+\end{minipage}
+\begin{minipage}[t]{.5\textwidth}
+    \centering
+    \subcaption{Group lasso}
+    \scriptsize
+    {\tabcolsep = 1.5mm
+    \begin{tabular}{ccll}
+    \toprule
+$D$&$N$ & \multicolumn{1}{c}{All-at-once} & \multicolumn{1}{c}{Inductive-skeleton (optimal)}\\ \midrule
+%2&25	&\textbf{1.256e-04 $\pm$	 4.023e-05}$^{**}$	&5.123e-04 $\pm$	3.546e-05\\
+2&50	&\textbf{1.041e-04 $\pm$	 1.614e-05}	&4.966e-04 $\pm$	1.848e-05\\
+& 100 &\textbf{8.949e-05 $\pm$	6.083e-06}	&5.020e-04 $\pm$	1.276e-05\\ \midrule
+%3&25	&\textbf{1.066e-04 $\pm$	1.182e-04}	&1.813e-04 $\pm$ 	2.132e-04\\
+3&50	&\textbf{4.354e-05 $\pm$	 1.526e-05}	&1.206e-04 $\pm$ 	9.440e-06\\
+& 100 &\textbf{3.231e-05 $\pm$	8.058e-06}	&1.141e-04 $\pm$	8.200e-06\\
+ \bottomrule
+    \end{tabular}
+    }
+    \label{tab:group-lasso}
+\end{minipage}
+\end{table}
+
+Since the Pareto front of the location problem can be represented by a B\'ezier simplex of $D = 2$ and 3, we expected that the experimental results agree with our analysis discussed in \cref{sec:all-vs-inductive}.
+In fact, \cref{tab:location-problem} shows that the inductive skeleton (optimal) outperformed for $D = 2$, which is consistent with our analysis.
+For $D = 3$, the difference of MSEs is not significant.
+\Cref{tab:risk-comparison} suggests that the difference of the risks between the two methods is very small for $(D, M) = (3, 3)$, and thus we did not observe significant differences of MSEs for $N = 50$ and 100.
+
+%In case of MED, the inductive skeleton (optimal) always achieved better MSEs than that of the all-at-once and the difference between the two methods is significant for $D=2$.
+%For $D=3$ however, there is no significant difference.
+
+In case of the group lasso, on the other hand, \cref{tab:group-lasso} shows that the all-at-once was better for both $D = 2$ and 3, and the differences are all significant.
+While our analysis assumes that the target hypersurface to be fitted can be represented by a B\'ezier simplex, the Pareto front of the group lasso cannot for $D = 2$ but for $D = 3$.
+Therefore, the results for $D = 2$ does not contradict to our analysis.
+Moreover, the results for $D = 3$ that the all-at-once achieved better MSEs accords with our analysis.
+
+%The reason why the inductive skeleton (optimal) did not outperform for $D=2$ is that the Pareto front of Birthwt originally cannot be represented by a B\'ezier simplex of degree two.
+
+From the above results, the validity of the analytic results is confirmed in practical situations.
+
+\section{Conclusion}\label{sec:conclusion}
+In this paper, we have shown that the asymptotic $\ell_2$-risk of the two B\'ezier simplex fitting methods developed previously: the all-at-once fitting and the inductive skeleton fitting.
+From our risk analysis, the optimal ratio of subsamples for the inductive skeleton fitting has been derived, which is useful for design of experiments to maximize the goodness of fit.
+We have discussed that superiority between the two fitting methods depends on the degree of a B\'ezier simplex to be fit: the inductive skeleton fitting with optimally-decoupled subsamples outperforms for degree two whereas the all-at-once fitting becomes the better for degree three, independent of the dimensionality of the B\'ezier simplex and its ambient space.
+The above theoretical results have been confirmed via numerical experiments under small to moderate sample sizes.
+We have demonstrated two applications of the analytic results in multi-objective optimization: a generalized location problem and a hyper-parameter tuning of the group lasso.
+
+As a remark for future work, we point out two important cases which the current theory does not cover.
+The first one is the case discussed in \cref{sec:MOP-instances} that the true surface is not representable by a model.
+The second one is presented in the literature \cite{Kobayashi2019}.
+When the parameters of a B\'ezier simplex are not given in a sample and to be estimated as well as the control points, the inductive skeleton fitting outperforms the all-at-once fitting even if the B\'ezier simplex is of degree \emph{three}.
+We believe that those cases would offer insightful examples to extend the scope of the theory.
+
+\bibliographystyle{plain}
+\bibliography{reference}
+\end{document}

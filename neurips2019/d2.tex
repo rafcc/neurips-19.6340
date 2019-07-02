@@ -1,0 +1,243 @@
+%==========================================================================
+%Template File for Evolutionary Computation Symposium
+%==========================================================================
+\documentclass{article}
+\usepackage{bm}
+
+\usepackage{amsmath,amssymb}
+
+\begin{document}
+\section{$D=2$ formula}
+\if0
+上で計算したように
+\begin{align}
+&\bm P_\text{OLS}^{(1)}
+(\bm P_\text{OLS}^{(1)})^\top
+=
+\sigma^2 [ (\bm Z^{(1)})^\top \bm Z^{(1)} ]^{-1}
+\\
+&\bm P_\text{OLS}^{(2)}
+(\bm P_\text{OLS}^{(1)})^\top
+=
+- \sigma^2 [(\bm Z^{(2)})^\top \bm Z^{(2)}]^{-1}
+[ (\bm Z^{(2)})^\top \bm Z^{(2)[1]} ]
+[ (\bm Z^{(1)})^\top \bm Z^{(1)} ]^{-1}
+\end{align}
+同様にして
+\begin{align}
+&\bm P_\text{OLS}^{(1)}
+(\bm P_\text{OLS}^{(2)})^\top
+=
+- \sigma^2 [(\bm Z^{(1)})^\top \bm Z^{(1)}]^{-1}
+[ (\bm Z^{(1)})^\top \bm Z^{[1](2)} ]
+[ (\bm Z^{(2)})^\top \bm Z^{(2)} ]^{-1}
+\end{align}
+%%%
+\begin{align}
+\bm P_\text{OLS}^{(2)}
+(\bm P_\text{OLS}^{(2)})^\top
+&=
+(-)^{1}
+\bm P_\text{OLS}^{(2)}
+\Big( (\bm Y^{(2)})^\top + (\bm P_\text{OLS}^{(1)})^\top \bm Z^{[1](2)}  \Big)
+(\bm Z^{(2)})
+[(\bm Z^{(2)})^\top \bm Z^{(2)}]^{-1}
+\notag \\
+&= %%%%
+- \bm P_\text{OLS}^{(2)}(\bm Y^{(2)})^\top (\bm Z^{(2)}) [(\bm Z^{(2)})^\top \bm Z^{(2)}]^{-1}
+- \bm P_\text{OLS}^{(2)} (\bm P_\text{OLS}^{(1)})^\top [\bm Z^{[1](2)} \bm Z^{(2)}] [(\bm Z^{(2)})^\top \bm Z^{(2)}]^{-1}
+\notag \\
+&= %%%%
+\sigma^2 [(\bm Z^{(2)})^\top \bm Z^{(2)}]^{-1}
+\notag \\
+&\quad %%%%
++
+\sigma^2 
+[(\bm Z^{(2)})^\top \bm Z^{(2)}]^{-1}
+[ (\bm Z^{(2)})^\top \bm Z^{(2)[1]} ]
+[ (\bm Z^{(1)})^\top \bm Z^{(1)} ]^{-1}
+[\bm Z^{[1](2)} \bm Z^{(2)}] [(\bm Z^{(2)})^\top \bm Z^{(2)}]^{-1}
+\end{align}
+となるので、それぞれの漸近値は
+\fi
+%%%%%  ここまでコメントアウト
+Each control point matrix has the following asymptotic form:
+\begin{align}
+&
+\bm P_\text{OLS}^{(1)}
+(\bm P_\text{OLS}^{(1)})^\top
+\approx
++
+\sigma^2 L \Big(
+\frac{1}{N^{(1)}}
+(\bm \Lambda ^{(1)[1]})^{-1}
+\Big)
+\\
+&
+\bm P_\text{OLS}^{(2)}
+(\bm P_\text{OLS}^{(1)})^\top
+\approx
+- \sigma^2 L \Big(
+\frac{1}{N^{(1)}}
+(\bm \Lambda ^{(2)[2]})^{-1}
+(\bm \Lambda ^{(2)[1]})
+(\bm \Lambda ^{(1)[1]})^{-1}
+\Big)
+\\
+&
+\bm P_\text{OLS}^{(1)}
+(\bm P_\text{OLS}^{(2)})^\top
+\approx
+- \sigma^2 L \Big(
+\frac{1}{N^{(1)}}
+(\bm \Lambda ^{(1)[1]})^{-1}
+(\bm \Lambda ^{[1](2)})
+(\bm \Lambda ^{(2)[2]})^{-1}
+\Big)
+\\
+&
+\bm P_\text{OLS}^{(2)}
+(\bm P_\text{OLS}^{(2)})^\top
+\approx
++
+ \sigma^2 L \Big(
+ \frac{1}{N^{(2)}} (\bm \Lambda ^{(2)[2]})^{-1}
+ +
+ \frac{1}{N^{(1)}}
+(\bm \Lambda ^{(2)[2]})^{-1}
+(\bm \Lambda ^{(2)[1]})
+(\bm \Lambda ^{(1)[1]})^{-1}
+(\bm \Lambda ^{[1](2)})
+(\bm \Lambda ^{(2)[2]})^{-1}
+ \Big)
+\end{align}
+ただし
+\begin{align}
+&({\bm \Lambda}^{(m)[k]})_{ \bm d ^{(m)} \bm d ^{(k)} }
+= %%%%
+\frac{(m-1)!}{\ _{M} C_m}
+\begin{pmatrix}
+D \\
+{\bm d}^{(m)}
+\end{pmatrix}
+%
+\begin{pmatrix}
+D \\
+{\bm d}^{(k)}
+\end{pmatrix}
+%
+\sum_{  |I| = m  }
+\frac{
+\delta_{{\bm I}, (\bm d ^{(m)} +  \bm d ^{(k)} )_{01} }
+\prod_{I_i = 1}( \bm d ^{(m)} +  \bm d ^{(k)}  )_i !}{
+[\sum_{I_i = 1} ( \bm d ^{(m)} +  \bm d ^{(k)}  )_i 
++ m - 1]!
+}
+\\
+&
+{\bm \Lambda}^{[k](m)}
+=
+({\bm \Lambda}^{(m)[k]})^\top
+\end{align}
+\normalsize
+where $\bm d^{(m)}$ means indices of $(m-1)$-dimensional subsimplices. In this $D=2$ case, they take values like
+\begin{align}
+&
+\bm d^{(1)} \in \Big\{
+\underbrace{ [1, 0, 0 \dots, 0] }_\text{M個},
+[0,1, 0, \dots, 0], \dots, [0, 0, 0, \dots, 1]
+\Big\}
+\label{7}
+\\
+&
+\bm d^{(2)} \in \Big\{
+\underbrace{ [1, 1, 0 \dots, 0, 0] }_\text{M個},
+[0,1, 1, \dots, 0, 0], \dots, [0, 0, 0,\dots, 1, 1]
+\Big\}
+\label{8}
+\end{align}
+%%
+$\delta_{{\bm I}, (\bm d ^{(m)} +  \bm d ^{(k)} )_{01} }$ is a kind of delta function defined by
+\begin{align}
+\delta_{{\bm I}, (\bm d ^{(m)} +  \bm d ^{(k)} )_{01} }
+&=
+\left\{ \begin{array}{ll}
+1 & ( {\bm I} = (\bm d ^{(m)} +  \bm d ^{(k)} )_{01}  ) \\
+0 & \text{otherwise}\\
+\end{array} \right.
+.
+\end{align}
+As one can see, $\bm d^{(1)}$ is a vector of only one component 1 and all zeros after,  $\bm d^{(2)}$ is a vector of only two components 1 and all zeros after.
+$(\bm d)_{01}$ is defined as
+\begin{align}
+[(\bm d)_{01}]_i
+=
+\left\{ \begin{array}{ll}
+1 & \text{if $\bm d_i \neq 0$} \\
+0 & \text{if $\bm d_i = 0$}\\
+\end{array} \right.
+\end{align}
+By using these ingredients, the asymptotic risk for $D=2$ inductive-skeleton fitting is represented by
+\begin{align}
+R_{N^{(1)}, N^{(2)} }
+\approx
+\sum_{\bm d_A \bm d_B} \Big(
+\Sigma \circ
+(\bm P_\text{SKE} \bm P_\text{SKE}^\top )
+\Big)_{\bm d_A \bm d_B}
+\end{align}
+where $\circ$ means Hadamard product of two matrices defined as
+\begin{align}
+(A \circ B)_{ij}
+=
+A_{ij} B_{ij}
+\end{align}
+and 
+\begin{align}
+&\Sigma_{\bm d_A \bm d_B}
+=
+\frac{(2D)!(M-1)!}{(2D+M-1)!}
+ \binom{D}{\bm d_A}
+ \binom{D}{\bm d_B}
+\binom{2D}{\bm d_A + \bm d_B}^{-1}
+, \label{9}
+\\
+&
+(\bm P_\text{SKE} \bm P_\text{SKE}^\top )
+=
+\begin{pmatrix}
+\bm P_\text{OLS}^{(1)}
+(\bm P_\text{OLS}^{(1)})^\top
+&
+\bm P_\text{OLS}^{(1)}
+(\bm P_\text{OLS}^{(2)})^\top
+\\
+\bm P_\text{OLS}^{(2)}
+(\bm P_\text{OLS}^{(1)})^\top
+&
+\bm P_\text{OLS}^{(2)}
+(\bm P_\text{OLS}^{(2)})^\top
+\end{pmatrix}
+.
+\label{10}
+\end{align}
+Please note that the order of indices $\bm d$ in \eqref{9} and \eqref{10} should be in the same order.
+In other words, the matrix \eqref{9} should take the following form:
+\begin{align}
+\begin{pmatrix}
+\eqref{7} \eqref{7}\text{components} & \eqref{7} \eqref{8}\text{components} \\
+\eqref{8} \eqref{7}\text{components} & \eqref{8} \eqref{8}\text{components}
+\end{pmatrix}
+.
+\end{align}
+
+
+
+
+
+%------------
+%以下，参考文献に関する記述
+%------------
+
+%------------------------------------------------------------------------------
+\end{document}

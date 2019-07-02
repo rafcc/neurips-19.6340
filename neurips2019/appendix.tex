@@ -1,0 +1,1536 @@
+\documentclass{article}
+\input{preamble}
+\myexternaldocument[main:]{main}
+\title{Appendix of Paper \#6340}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+In this appendix, we provide the proof of the main theorem, the detailed experimental settings for reproducibility, and additional experimental results.
+\end{abstract}
+
+\appendix
+\section{Proof of \texorpdfstring{\cref{main:thm:risk}}{theorem 2}}\label{sec:proof-of-main-theorem}
+As we commented in the main body of the paper, we can regard $\bm b (\bm t) - \hat{\bm b} (\bm t | S_N)$ as a new B\'ezier simplex, and we call its control points as $\bm p'_{\bm d}$.
+By using it, the risk $R_N = \E_{S_N} \sqbra{\E_{\bm t} \sqbra{\norm{\bm b (\bm t) - \hat{\bm b} (\bm t | S_N)}^2}}$ can be rewritten as
+\begin{align}
+R_N
+&=
+\E_{S_N}
+\sqbra{
+\E_{\bm t}
+\sqbra{
+\norm{
+\sum_{\bm d \in \N_D^M}
+\binom{D}{\bm d}
+\bm t^{\bm d} \bm p_{\bm d}'
+}^2
+}
+}
+\notag \\
+&=
+\E_{S_N}
+\sqbra{
+\E_{\bm t}
+\sqbra{
+\sum_{\bm d_A, \bm d_B \in \N_D^M}
+\binom{D}{\bm d_A}
+\binom{D}{\bm d_B}
+\bm t^{\bm d_A + \bm d_A } 
+\paren{
+\bm p_{\bm d_A}'
+\cdot
+\bm p_{\bm d_B}'
+}
+}
+}
+\notag \\
+&= %%%%
+\sum_{\bm d_A, \bm d_B \in \N_D^M}
+\binom{D}{\bm d_A}
+\binom{D}{\bm d_B}
+\E_{\bm t}
+\sqbra{
+\bm t^{\bm d_A + \bm d_A } 
+}
+\E_{S_N}
+\sqbra{
+\paren{
+\bm p_{\bm d_A}'
+\cdot
+\bm p_{\bm d_B}'
+}
+}
+.
+\label{eqn:RN_in_supp}
+\end{align}
+The inner product in the expectation over $S_N$ is equivalent to $\paren{\bm P \bm P^\top}_{\bm d_A \bm d_B}$ where $\bm P$ is the control point matrix defined in main body.
+So we need to massage the expectation over $\bm t \sim U(\Delta^{M-1})$.
+To do it, the following proposition is useful.
+\begin{prop}\label{thm:integ_formula}
+Suppose $\sum_{i=1}^M q_i = Q \in \N$ and $r \in \R$, then the following integral formula is satisfied.
+\begin{align}
+I_{\bm q} (r)
+&:=
+\paren{
+\prod_{i=1}^M
+\int_0^\infty
+ dt_i t_i^{q_i}
+}
+\delta \paren{
+r - \sum_{i=1}^M t_i
+}
+= %%%%
+r^{Q+M-1} \frac{Q!}{(Q+M-1)! } %\prod_{i=1}^M q_i !
+\binom{Q}{\bm q}^{-1}
+,
+\end{align}
+where $\delta (r)$ is the Dirac's delta.
+\end{prop}
+%
+\begin{proof}
+One of the easiest proofs is done by making the use of the Laplace transform $\mathcal{L}$ and its inverse $\mathcal{L}^{-1}$, i.e. the nature of $I_{\bm q}(r) = \mathcal{L}^{-1} \sqbra{\mathcal{L} \sqbra{I_{\bm q}}} (r)$.
+First, the Laplace transform of $I_{\bm q}$ is
+\begin{align}
+\mathcal{L} [ I_{\bm q} ] (z)
+=
+\int_0^\infty dr \ e^{-zr} I_{\bm q} (r)
+&=
+\Big(
+\prod_{i=1}^M
+\int_0^\infty
+ dt_i t_i^{q_i}
+ e^{-zt_i}
+\Big)
+\notag \\
+&=
+\frac{Q!}{z^{Q+M}}
+\binom{Q}{\bm q}^{-1}.
+\end{align}
+The inverse Laplace transform of a function $f(z)$ is defined by picking up the residue, the coefficient of $1/z$, of $e^{-zr} f(z)$.
+One can calculate the residue of $e^{-zr} \mathcal{L} [ I_{\bm q} ] (z)$ by expanding $e^{-zr}$ with respect to $z$.
+It provides $z^{Q+M-1}r^{Q+M-1}/{(Q+M-1)!}$, so we get
+\[
+\mathcal{L}^{-1} [\mathcal{L} [ I_{\bm q} ]] (r)
+=
+r^{Q+M-1} \frac{Q!}{(Q+M-1)! } %\prod_{i=1}^M q_i !
+\binom{Q}{\bm q}^{-1}.
+\]
+\end{proof}
+%%%%%
+Now, let us get back to the proof of the theorem.
+The expectation value $\E_{\bm t}[ f(\bm t) ]$ can be represented by the following integral 
+\[
+\E_{\bm t} [f(\bm t)]
+=
+(M-1)!
+\Big(
+\prod_{i=1}^M
+\int_0^\infty
+ dt_i 
+\Big)
+\delta \Big(
+1 - \sum_{i=1}^M t_i
+\Big)
+f(\bm t)
+\]
+The multiplication of $(M-1)!$ is necessary because we need $\E_{\bm t}[1] = 1$.
+This is easily checked by using the above proposition by taking $q_i =0$ for all $i$ and $r=1$.
+We can also calculate the value $\E_{\bm t}[ \bm t^{\bm d_A + \bm d_B} ]$ by using the proposition with $r=1$ as
+\[
+\E_{\bm t}[ \bm t^{\bm d_A + \bm d_B} ]
+=
+\frac{(2D)!(M-1)!}{(2D + M -1)!}
+\binom{2D}{\bm d_A + \bm d_B}^{-1}.
+\]
+By substituting it to \cref{eqn:RN_in_supp}, we get what we want
+\begin{align}
+R_N
+=
+\sum_{\bm d_A, \bm d_B \in \N_D^M}
+\frac{(2D)!(M-1)!}{(2D + M -1)!}
+\binom{D}{\bm d_A}
+\binom{D}{\bm d_B}
+\binom{2D}{\bm d_A + \bm d_B}^{-1}
+\E_{S_N}
+\Bigg[
+(
+\bm P \bm P^\top
+)_{\bm d_A \bm d_B}
+\Bigg].
+\end{align}
+
+\section{Derivation of \texorpdfstring{$\sum_{i, j = 1}^N (A^{-1} \circ A)_{ij} = N$}{sum of Hadamard products}}\label{sec:derivation-of-sum}
+\begin{prop}
+Let $A = (a_{ij})$ be a regular matrix of size $N$.
+Then
+\[
+    \sum_{i, j = 1}^N (A^{-1} \circ A)_{ij} = N,
+\]
+where $A \circ B$ is Hadamard product of $A$ and $B$.
+\end{prop}
+\begin{proof}
+Let $\tilde{A}$ be a cofactor matrix and $C_{ij}$ be a $(i, j)$ minor of $A$.
+\begin{equation*}
+\begin{split}
+\sum_{i, j = 1}^N (A^{-1} \circ A)_{ij}  
+    &= \sum_{i, j = 1}^N \left(\frac{1}{\det(A)}\tilde{A} \circ A\right)_{ij} \\
+    &= \frac{1}{\det(A)}\sum_{i, j = 1}^N (\tilde{A}\circ A)_{ij} \\
+    &= \frac{1}{\det(A)}\sum_{i, j = 1}^N a_{ij}C_{ij} \\
+    &= \frac{1}{\det(A)}\sum_{i = 1}^N \sum_{j = 1}^N a_{ij}C_{ij}\\
+    &= \frac{1}{\det(A)}\sum_{i = 1}^N \det(A) \\
+    &= N
+\end{split}
+\end{equation*}
+\end{proof}
+
+\section{Proof of \texorpdfstring{\cref{main:thm:sigma-is-non-singular}}{Theorem 3}}\label{sec:proof-of-regularity}
+Put
+\begin{align}
+\ZZ_{d_A d_B}
+:=
+\frac{(2D)!(M - 1)!}{(2D + M - 1)!}
+ \begin{pmatrix}
+  D \\
+  \bm{d}_A
+ \end{pmatrix}
+ \begin{pmatrix}
+  D \\
+  {\bm d}_B
+ \end{pmatrix}
+ \begin{pmatrix}
+  2D \\
+  {\bm d}_A + {\bm d}_B
+ \end{pmatrix}^{-1}.
+\end{align}
+We prove $\ZZ = (\ZZ_{AB})$ is a regular matrix by considering the representation of appropriate spaces.
+We start to give some review on bilinear form.
+\begin{defn}
+Let $V$ be a real vector space. A map $B\colon V\times V \rightarrow \R$ is said to be bininear form if for any $\bm{u}, \bm{v}, \bm{w} \in V$ and $\lambda \in \R$,
+\begin{eqnarray*}
+\bullet B(\bm{u}+ \bm{v}, \bm{w}) = B(\bm{u}+\bm{w}) + B(\bm{v}, \bm{w})\ \text{and}\  B(\lambda \bm{u}, \bm{v}) = \lambda B(\bm{u}, \bm{v}) \\
+\bullet B(\bm{u}, \bm{v}+\bm{w})  = B(\bm{u}+\bm{v}) + B(\bm{u}, \bm{w})\ \text{and}\  B( \bm{u},\lambda \bm{v}) = \lambda B(\bm{u}, \bm{v}) 
+\end{eqnarray*}
+holds. Moreover, a bilinear form $B$ is called symmetric if $B(\bm{u}, \bm{v})=B(\bm{v}, \bm{u})$ holds for any $\bm{u}, \bm{v} \in V$
+
+\end{defn}
+
+\begin{thm}
+Let $V$ be an $n$-dimensional real vector space and $\set{\bm{e}_1, \dots, \bm{e}_n}$ be a basis of $V$. Let  $B\colon V\times V \rightarrow \R$ be a bilinear form. Put $A = (B(\bm{e}_i, \bm{e_j}))$. Then the map 
+
+\[
+\begin{array}{ccc}
+B':V \times V  & \longrightarrow & \R\\
+\ \ \ \ \  \rotatebox{90}{$\in$}    &                 & \rotatebox{90}{$\in$} \\
+\ \ \ \ \ (\bm{u}, \bm{v})                   & \longmapsto     & \bm{x}^{\top} A\bm{y}
+\end{array},
+\]
+is a bilinear form which is equal to $B$, where $\bm{u}=\sum_{i=1}^n x_i e_i$ and $\bm{v}=\sum_{i=1}^n y_i e_i$.
+\end{thm}
+We call the matrix $A$ the representation matrix of $B$ with respect to a basis  $\set{\bm{e}_1, \dots, \bm{e}_n}$ .  By the construction of $A$, we have the following proposition.
+\begin{prop}
+Let $V$ be an $n$-dimensional real vector space and   $B\colon V\times V \rightarrow \R$ be a bilinear form. Then the representation matrix of $B$ with respect to a basis of $V$ is a symmetric matrix if and only if $B$ is a symmetric bilinear form.
+\end{prop} 
+\begin{thm}\label{thm:Sigma-is-regular}
+$\ZZ$ is a regular matrix.
+\end{thm}
+\begin{proof}
+Let $V_{M, D}$ is the vector space of the homogenous polynomials of degree $D$ with $M$ variables $\bm{x}$.
+We define the symmetric bilinear form  by
+\[
+\begin{array}{ccc}
+L:V_{M, D} \times V_{M, D} & \longrightarrow & \R\\
+\ \ \ \  \rotatebox{90}{$\in$}    &                 & \rotatebox{90}{$\in$} \\
+\ \ \ \  (P, Q)                   & \longmapsto     & \int_{\Delta} P(\bm{x}) Q(\bm{x}) d\bm{x}
+\end{array},
+\]
+where $\Delta = \Set{\bm{x} = (x_1, \dots, x_M) \in \R^M | x_i >0,  x_1 + \dots + x_M = 1}$.
+
+$L$ is clearly symmetric and bilinear.
+Let 
+\[
+    Z = \Set{\frac{\bm{x}^{\bm{d_A}}}{\bm{d_A}!} | \bm{d_A} = (d_A^{(1)}, \dots, d_A^{(M)}) \in \N^M, d_A^{(1)} + \dots + d_A^{(M)} = D}
+\]
+be a set of polynomials of degree $D$ with $M$ variables.
+Then $Z$ is a basis of $V_{M, D}$.
+We claim that the representation matrix $G$ of the symmetric bilinear form $L$ with respect to $Z$ is equal to $\ZZ$ up to scalar multiplication.
+
+\begin{claim}\label{thm:rep}
+Let $\ZZ$, $Z$, $L$ as above.
+Then the representation matrix of $L$ with respect to $Z$ is equal to $r\cdot \ZZ$ for some $r \neq 0 \in \R$.
+\end{claim}
+\begin{proof}[Proof of \cref{thm:rep}]
+We have
+\begin{equation*}
+\begin{split}
+L\paren{\frac{\bm{x}^{\bm{d_A}}}{\bm{d_A}!}, \frac{\bm{x}^{\bm{d_B}}}{\bm{d_B}!}}
+  & = \frac{1}{\bm{d_A}!\bm{d_B}!}\int_{\Delta} \bm{x}^{\bm{d_A} + \bm{d_B}}d\bm{x}\\
+  & = \frac{1}{\bm{d_A}!\bm{d_B}!} \frac{\Gamma(d_A^{(1)} + d_B^{(1)}) \dots \Gamma(d_A^{(M)} + d_B^{(M)}) }{\Gamma(2D + M)} \\
+  & = \frac{(\bm{d_A} + \bm{d_B})!}{\bm{d_A}!\bm{d_B}!}\frac{1}{(2D + M - 1)!}\\
+  & = \frac{1}{(D!)^2(M - 1)!} \frac{D!}{\bm{d_A}!} \frac{D!}{\bm{d_B}!} \paren{\frac{2D!}{(\bm{d_A + \bm{d_B}})!}}^{-1} \frac{(2D)!(M - 1)!}{(2D + M - 1)!} \\
+  & = \frac{1}{(D!)^2(M - 1)!} \ZZ_{\bm{d_A}\bm{d_B}}.
+\end{split}
+\end{equation*}
+Hence, the claim holds.
+\end{proof}
+Since $G$ is a symmetric matrix, $G$ is diagonalizable.
+Hence, for some basis $Z'$, the representation matrix $H$ of the symmetric bilinear form $L$ with respect to $Z'$ is a diagonal matrix.
+In this case, the diagonal components of $H$ is equal to the eigenvalues of $G$ and is equal to $L(P, P)$ for some $P \in Z'$.
+Hence, for proving our theorem, it is enough to show that $L(P, P)$ is positive.
+To see the positivity of $L(P, P)$, we claim the following.
+
+\begin{claim}\label{thm:hom}
+Let $P(\bm{x})$ be a homogenous polynomial of degree $D$ with $M$ variables.
+Put $\Delta = \Set{\bm{x} = (x_1, \dots, x_M) \in \R^M | x_i > 0,\ x_1 + \dots + x_M = 1}$.
+Assume $\int_{\Delta} P(\bm{x})^2 d \bm{x} = 0$.
+Then $P(\bm{x}) = 0$.
+\end{claim}
+
+\begin{proof}[Proof of \cref{thm:hom}]
+Assume $P(\bm{x}) \neq 0$.
+Since $\int_{\Delta} P(\bm{x})^2 d \bm{x} = 0$, we see $P(\bm{x}) = 0$ for any $\bm{x} \in \Delta$.
+Since $P(\bm{x}) \neq 0$, we have a point $\bm{a} = (a_1, \dots, a_M) \in \R^M_+$ such that $P(\bm{a}) \neq 0$.
+Put $\lambda = \sum a_i$. Then, since $P(\bm{x})$ is a homogeneous polynomial of degree $D$, we have
+\[
+    P(\bm{a}) = \lambda^D P(\frac{1}{\lambda} \bm{a}) \neq 0.
+\]
+The non equality holds because $\sum 1 / \lambda \cdot a_i \in \Delta$.
+\end{proof}
+
+Since $P$ is a nonzero polynomial, we have
+\[
+    (P, P) = \int_{\Delta} P(\bm{x})^2 d \bm{x} > 0
+\]
+by \cref{thm:hom}.
+Therefore, any eigenvalue of $G$ is positive.
+This implies that $\ZZ$ is a regular matrix.
+\end{proof}
+%%%%%%
+\section{Complete derivation of the risk asymptotics in inductive skeleton fitting}\label{sec:risk-derivation}
+Let us begin with how control points on $(m-1)$-subsimplices from minimizing the OLS error
+\begin{align}
+\frac{1}{N^{(m)}}
+\sum_{n=1}^{N^{(m)}}
+\norm{
+\bm x_n^{(m)}
+-
+\hat{\bm b} (\bm t_n^{(m)})
+}^2
+.
+\end{align}
+In this paper, we assume that sample $\bm x_n$ always represented by sum of a certain B\'esier simplex and noise:
+\begin{align}
+\bm x_n^{(m)}
+=
+\bm b (\bm t_n^{(m)})
++
+\bm \epsilon_n^{(m)},
+\quad
+\epsilon_n^{(m)} \sim \mathcal{N}(\bm 0, \sigma^2 \bm I_L)
+\end{align}
+%%
+\paragraph{all-at-once fitting}
+All-at-once fitting in our paper can be regarded $m=M$ case.
+In this case, we omit the superscript $(m=M)$ and consider minimization of
+\begin{align}
+\frac{1}{N}
+\sum_{n=1}^{N}
+\norm{
+\bm x_n
+-
+\hat{\bm b} (\bm t_n)
+}^2
+&=
+\frac{1}{N}
+\sum_{n=1}^{N}
+\Big| \Big|
+{\bm b} (\bm t_n)
+-
+\hat{\bm b} (\bm t_n)
++
+\bm \epsilon_n
+\Big| \Big|^2
+\notag \\
+&=
+\frac{1}{N}
+\sum_{n=1}^{N}
+\Big| \Big|
+\sum_{\bm d \in \N_D^M}
+\binom{D}{\bm d} \bm t^{\bm d}_n
+\bm p_{\bm d}'
++
+\bm \epsilon_n
+\Big| \Big|^2
+\notag \\
+&=
+\frac{1}{N}
+\norm{
+\bm Z \bm P
++
+\bm Y
+}_\mathrm{F}^2,
+\end{align}
+where the $\norm{\cdot}_\mathrm{F}$ means Frobenius norm of the matrix, and the optimum is determined as
+$\bm P_\mathrm{OLS} = - (\bm Z^\top \bm Z)^{-1} \bm Z^\top \bm Y$ by using usual argument.
+%%
+\paragraph{inductive skeleton fitting}
+On the other hand, the above argument should be modified when we consider the inductive skeleton fitting.
+First of all, we can reduce the problem to minimization of
+\begin{align}
+\frac{1}{N^{(m)}}
+\sum_{n=1}^{N^{(m)}}
+\Big| \Big|
+\sum_{\bm d \in \N_D^M}
+\binom{D}{\bm d} (\bm t_n^{(m)})^{\bm d}
+\bm p_{\bm d}'
++
+\bm \epsilon_n^{(m)}
+\Big| \Big|^2.
+\label{eqn:ols_inductive_supp}
+\end{align}
+Note that $\bm t_n^{(m)}$ is on $(m-1)$-subsimplices.
+It means that the vector
+\begin{align}
+\bm t_n^{(m)}
+=
+[
+(\bm t_n)_1,
+(\bm t_n)_2,
+\dots ,
+(\bm t_n)_M
+]
+\end{align}
+has $(M-m)$ zero components.
+For example, if it is on a subsimplex labelled by
+\begin{align}
+\bm I = [1, 1, \dots, 1, 0, 0, \dots, 0],
+\end{align}
+with $m$ ones and $(M-m)$ zeros, then $\bm t_n^{(m)}$ takes
+\begin{align}
+\bm t_n^{(m)}
+=
+[
+\text{non-zero},
+\text{non-zero},
+\dots ,
+\text{non-zero},
+0,
+0,
+\dots,
+0
+].
+\end{align}
+As a result, there is no contribution from $\bm p_{\bm d}'$ which is not on the simplex because such point is labelled by
+\begin{align}
+\bm d
+=
+[
+d_1,
+d_2,
+\dots,
+d_m,
+\text{non-zero},
+\text{non-zero},
+\dots,
+\text{non-zero}
+]
+\end{align}
+because
+\begin{align}
+(t_n^{(m)})^{\bm d}
+=
+(\text{non-zero})_1^{d_1}
+(\text{non-zero})_2^{d_2}
+\dots
+(\text{non-zero})_m^{d_m}
+(0)^{\text{non-zero}}
+(0)^{\text{non-zero}}
+\dots
+(0)^{\text{non-zero}}
+\end{align}
+vanishes inside the summation of \cref{eqn:ols_inductive_supp}.
+In summary, we should restrict range of the summation in \cref{eqn:ols_inductive_supp} as
+\begin{align}
+&
+\frac{1}{N^{(m)}}
+\sum_{n=1}^{N^{(m)}}
+\Big| \Big|
+\sum_{\bm d \in (\N_D^M)^{(m)}}
+\binom{D}{\bm d} (\bm t_n^{(m)})^{\bm d}
+\bm p_{\bm d}'
++
+\sum_{k < m}
+\sum_{\bm d \in (\N_D^M)^{(k)}}
+\binom{D}{\bm d} (\bm t_n^{(m)})^{\bm d}
+\bm p_{\bm d}'
++
+\bm \epsilon_n^{(m)}
+\Big| \Big|^2
+\notag \\
+&=
+\frac{1}{N^{(m)}}
+\norm{
+\bm Z^{(m)} \bm P^{(m)}
++
+\sum_{k<m}
+\bm Z^{(m)[k]} \bm P^{(k)}
++
+\bm Y^{(m)}
+}^2_\mathrm{F}.
+\label{eqn:ols_ind_supp2}
+\end{align}
+In the inductive skeleton fitting, we regard all $\bm P^{(k<m)}$ are already determined and fixed in the optimization process of $\bm P^{(m)}$, so the last 2 terms in \cref{eqn:ols_ind_supp2} play a role of $\bm Y$ in all-at-once fitting, and the optimal $\bm P^{(m)}$ is determined as
+\begin{align}
+{\bm P}_\mathrm{OLS}^{(m)}
+= %%%%
+-
+[({\bm Z}^{(m)})^\top {\bm Z}^{(m)}]^{-1}
+({\bm Z}^{(m)})^\top 
+\Big(
+{\bm Y}^{(m)}
++
+\sum_{k<m}
+{\bm Z}^{(m) [k]}
+{\bm P}_\mathrm{OLS}^{(k)}
+\Big).
+\label{eqn:rec_supp}
+\end{align}
+
+To derive the asymptotics of the risk, we have to consider $\E_\text{samples} [ \bm P \bm P^\top ]$.
+In the all-at-once fitting, it is simple as explained in the main body of the paper.
+The key idea is calculating the expectation over the noise $\bm Y$ first and making use of the law of large numbers.
+On the inductive skeleton fitting, we take same strategy.
+%
+Let us call the control point matrix $\bm P$ determined by the inductive skeleton fitting as $\bm P_\text{ISK}$.
+It decomposes to ``direct sum'' along row of the matrix as
+\begin{align}
+\bm P_\text{ISK}
+=
+\begin{pmatrix}
+{\bm P}^{(1)}_\mathrm{OLS}
+\\
+{\bm P}^{(2) }_\mathrm{OLS}
+\\
+\vdots
+\\
+{\bm P}^{(M)}_\mathrm{OLS}
+\end{pmatrix}
+.
+\end{align}
+If the degree of the B\'ezier simplex is less than $m$, there may be no control point on $(m+k)$-subsimplices.
+In such case, we regard $\bm P_\mathrm{OLS}^{(m+k)} = \bm 0$.
+By using the decomposition, we can get the ``direct sum'' of the matrix $\bm P_\text{ISK} \bm P_\text{ISK}^\top$ as follows.
+\begin{align}
+\bm P_\text{ISK} \bm P_\text{ISK}^\top
+=
+\begin{pmatrix}
+{\bm P}^{(1)}_\mathrm{OLS}
+({\bm P}^{(1)}_\mathrm{OLS})^\top
+&
+{\bm P}^{(1)}_\mathrm{OLS}
+({\bm P}^{(2)}_\mathrm{OLS})^\top
+&
+\cdots
+&
+{\bm P}^{(1)}_\mathrm{OLS}
+({\bm P}^{(M)}_\mathrm{OLS})^\top
+\\
+{\bm P}^{(2)}_\mathrm{OLS}
+({\bm P}^{(1)}_\mathrm{OLS})^\top
+&
+{\bm P}^{(2)}_\mathrm{OLS}
+({\bm P}^{(2)}_\mathrm{OLS})^\top
+&
+\cdots
+&
+{\bm P}^{(2)}_\mathrm{OLS}
+({\bm P}^{(M)}_\mathrm{OLS})^\top
+\\
+\vdots & \vdots & \ & \vdots
+\\
+{\bm P}^{(M)}_\mathrm{OLS}
+({\bm P}^{(1)}_\mathrm{OLS})^\top
+&
+{\bm P}^{(M)}_\mathrm{OLS}
+({\bm P}^{(2)}_\mathrm{OLS})^\top
+&
+\cdots
+&
+{\bm P}^{(M)}_\mathrm{OLS}
+({\bm P}^{(M)}_\mathrm{OLS})^\top
+\end{pmatrix}
+.
+\end{align}
+Therefore, to get the asymptotic form of the risk, it is sufficient to consider $\E_\text{samples}[{\bm P}^{(i)}_\mathrm{OLS}
+({\bm P}^{(j)}_\mathrm{OLS})^\top]$ for $i, j = 1, 2, \dots, M$.
+To get a grasp of how it calculated, let us take $(i,j) = (1,1)$ and $(i, j) =  (2, 1)$ here.
+First, $(i,j) = (1,1)$ is the simplest case because there is no lower-dimensional subsimplex.
+So we do not need 2nd term in \cref{eqn:rec_supp} and get
+\begin{align}
+&\E_\text{samples}
+\Big[
+\bm P_\mathrm{OLS}^{(1)}
+(\bm P_\mathrm{OLS}^{(1)})^\top
+\Big]
+\notag \\
+&=
+\E_\text{samples}
+\Bigg[
+\Big[
+-
+[({\bm Z}^{(1)})^\top {\bm Z}^{(1)}]^{-1}
+({\bm Z}^{(1)})^\top 
+{\bm Y}^{(1)}
+\Big]
+\Big[
+-
+({\bm Y}^{(1)})^\top
+{\bm Z}^{(1)}
+[({\bm Z}^{(1)})^\top {\bm Z}^{(1)}]^{-1}
+\Big]
+\Bigg]
+\notag \\
+&=
+\E_{\text{samples}}
+\Bigg[
+[({\bm Z}^{(1)})^\top {\bm Z}^{(1)}]^{-1}
+({\bm Z}^{(1)})^\top 
+\E_{\bm Y^{(1)}}
+\Big[
+{\bm Y}^{(1)}
+({\bm Y}^{(1)})^\top
+\Big]
+{\bm Z}^{(1)}
+[({\bm Z}^{(1)})^\top {\bm Z}^{(1)}]^{-1}
+\Bigg]
+\notag \\
+&=
+\E_{\text{samples}}
+\Bigg[
+[({\bm Z}^{(1)})^\top {\bm Z}^{(1)}]^{-1}
+({\bm Z}^{(1)})^\top 
+\Big[
+\sigma^2 L 1_{N^{(1)}}
+\Big]
+{\bm Z}^{(1)}
+[({\bm Z}^{(1)})^\top {\bm Z}^{(1)}]^{-1}
+\Bigg]
+\notag \\
+&=
+\sigma^2 L
+\E_{\text{samples}}
+\Bigg[
+[({\bm Z}^{(1)})^\top {\bm Z}^{(1)}]^{-1}
+\Bigg].
+\label{eqn:P1P1}
+\end{align}
+In fact, this simplification occurs in calculation with all-at-once fitting.
+So $(i, j) = (1,1)$ case is in same situation of the calculation of the asymptotic risk of the all-at-once fitting.
+How about $(i, j) = (2, 1)$ ?
+This is also simple because we can reduce the calculation to lower-dimensional object by using \cref{eqn:rec_supp}:
+\begin{align}
+&\E_\text{samples}
+\Big[
+\bm P_\mathrm{OLS}^{(2)}
+(\bm P_\mathrm{OLS}^{(1)})^\top
+\Big]
+\notag \\
+&=
+\E_\text{samples}
+\Bigg[
+\Big[
+-
+[({\bm Z}^{(2)})^\top {\bm Z}^{(2)}]^{-1}
+({\bm Z}^{(2)})^\top 
+\Big(
+{\bm Y}^{(2)}
++
+\bm Z^{(2)[1]}
+\bm P_\mathrm{OLS}^{(1)}
+\Big)
+\Big]
+(\bm P_\mathrm{OLS}^{(1)})^\top
+\Bigg]
+\notag \\
+&=
+\E_\text{samples}
+\Bigg[
+\Big[
+-
+[({\bm Z}^{(2)})^\top {\bm Z}^{(2)}]^{-1}
+({\bm Z}^{(2)})^\top 
+\Big(
+\E_{\bm Y^{(2)}}
+[
+{\bm Y}^{(2)}
+]
++
+\bm Z^{(2)[1]}
+\bm P_\mathrm{OLS}^{(1)}
+\Big)
+\Big]
+(\bm P_\mathrm{OLS}^{(1)})^\top
+\Bigg]
+\notag \\
+&=
+\E_\text{samples}
+\Bigg[
+\Big[
+-
+[({\bm Z}^{(2)})^\top {\bm Z}^{(2)}]^{-1}
+({\bm Z}^{(2)})^\top 
+\Big(
+[
+0
+]
++
+\bm Z^{(2)[1]}
+\bm P_\mathrm{OLS}^{(1)}
+\Big)
+\Big]
+(\bm P_\mathrm{OLS}^{(1)})^\top
+\Bigg]
+\notag \\
+&=
+- \sigma^2 L
+\E_\text{samples}
+\Bigg[
+[({\bm Z}^{(2)})^\top {\bm Z}^{(2)}]^{-1}
+[({\bm Z}^{(2)})^\top \bm Z^{(2)[1]}]
+[({\bm Z}^{(1)})^\top {\bm Z}^{(1)}]^{-1}
+\Bigg].
+\label{eqn:P2P1}
+\end{align}
+With generic $(i, j)$, we can perform same procedure.
+
+Now, let us make next step.
+To calculate the asymptotic form, it is important to notice that the following explicit forms are averages on sampling from $\bm t_n^{(m)} \sim U(\cup_{|\bm I|=m} \Delta^{\bm I})$.
+\begin{align}
+&
+\frac{1}{N^{(m)}}
+\Big(
+(\bm Z^{(m)})^\top
+\bm Z^{(m)[k]}
+\Big)_{\bm d_m \bm d_k}
+=
+\binom{D}{\bm d_m}
+\binom{D}{\bm d_k}
+\sum_{n=1}^{N^{(m)}}
+\frac{1}{N^{(m)}}
+(\bm t_n^{(m)})^{\bm d_m + \bm d_k}
+\label{eqn:Zmk}
+\\
+&
+\frac{1}{N^{(m)}}
+\Big(
+(\bm Z^{(m)})^\top
+\bm Z^{(m)}
+\Big)_{\bm d_A \bm d_B}
+=
+\binom{D}{\bm d_A}
+\binom{D}{\bm d_B}
+\sum_{n=1}^{N^{(m)}}
+\frac{1}{N^{(m)}}
+(\bm t_n^{(m)})^{\bm d_A + \bm d_B}
+\label{eqn:Zmm}
+\end{align}
+By applying the law of large numbers, they converge to exact values of expectation:
+\begin{align}
+&
+\cref{eqn:Zmk}
+\to
+\binom{D}{\bm d_m}
+\binom{D}{\bm d_k}
+\E_{\bm t^{(m)} \sim U(\cup_{|\bm I|=m} \Delta^{\bm I})} [
+(\bm t^{(m)})^{\bm d_m + \bm d_k}
+]
+\label{eqn:Lmk}
+\\
+&
+\cref{eqn:Zmm}
+\to
+\binom{D}{\bm d_A}
+\binom{D}{\bm d_B}
+\E_{\bm t^{(m)} \sim U(\cup_{|\bm I|=m} \Delta^{\bm I})} [
+(\bm t^{(m)})^{\bm d_A + \bm d_B}
+]
+\label{eqn:Lmm}
+\end{align}
+To compute expectation values over $U(\cup_{|\bm I|=m} \Delta^{\bm I})$, the next proposition is useful.
+\begin{prop}
+\begin{align}
+\E_{\bm t \sim U(\cup_{|\bm I|=m} \Delta^{\bm I})} [
+\bm t^{\bm d^{(m)} + \bm d^{(k)}}
+]
+=
+\frac{(m-1)!}{\ _M C_m}
+\sum_{|\bm I| = m}
+\frac{
+1_{{\bm I}=(\bm d ^{(m)} +  \bm d ^{(k)} )_{01} }
+\prod_{I_i = 1}( \bm d ^{(m)} +  \bm d ^{(k)}  )_i !}{
+[\sum_{I_i = 1} ( \bm d ^{(m)} +  \bm d ^{(k)}  )_i 
++ m - 1]!
+},
+\end{align}
+where $\bm I = [I_1, I_2, \dots, I_M]$ represents vector with binary components, $I_i \in \set{0, 1}$ and $\card{\bm I} = \sum_{i=1}^M I_i$.
+\end{prop}
+%%%
+\begin{proof}
+The expectation value with the uniform distribution on $(m-1)$-subsimplices should be expressed by integral
+\begin{align}
+\E_{\bm t \sim U(\cup_{|\bm I|=m} \Delta^{\bm I})} [ f(\bm t) ]
+=
+(\text{const.})
+\int_{0}^1 \Big( 
+\prod_{i=1}^M dt_i
+\Big)
+\ f(\bm t)
+\sum_{|\bm I| = m}
+\delta \Big(
+1 - \sum_{I_i =1} t_i
+\Big)
+\prod_{I_i =0}
+\delta (t_i)
+\label{eqn:exp_sub}
+\end{align}
+because it can be regarded integral over $\Delta^{M}$ restricted to the set of subsimplices.
+The normalization constant can be calculated by the integral $f(\bm t) = 1$ inserted.
+In this situation, there is no special direction on $\bm t$, and all contributions from the sum $\sum_{|\bm I|=m}$ should be identical.
+Therefore, we do not need to calculate all of them but just select one configuration $\bm I$ easy to calculate and multiply the number of combination giving $|\bm I|=m$, i.e. $\ _M C_m$.
+Let us take
+\begin{align}
+\bm I = [\underbrace{1,1, \dots, 1}_{m}, 0, 0, \dots, 0]
+\end{align}
+then the integral reduces to
+\begin{align}
+\int_{0}^1 \Big( 
+\prod_{i=1}^m dt_i
+\Big)
+\delta \Big(
+1 - \sum_{i=1}^m t_i
+\Big)
+=
+\frac{1}{(m-1)!}
+\end{align}
+where we use the integral formula derived in \ref{thm:integ_formula}.
+It determines the constant in \cref{eqn:exp_sub}, 
+\begin{align}
+(\text{const.})
+=
+\frac{(m-1)!}{\ _M C_m}
+.
+\end{align}
+Next task is performing the integral $f(\bm t) = \bm t^{\bm d^{(m)} + \bm d^{(k)}}$ inserted.
+It is also not so difficult.
+To get nonzero value from $\bm I$-th contribution, $\bm d^{(m)} + \bm d^{(k)}$ should be on subsimplex labelled by $\bm I$.
+If not so, the integrand includes
+\begin{align}
+\int dt \
+t^\text{non-zero}
+\delta(t)
+=
+0^\text{non-zero}
+=0.
+\end{align}
+To represent this condition, let us introduce the notation
+\begin{align}
+(\bm d)_{01}
+=
+[d^\mathrm{bin}_1, d^\mathrm{bin}_2, \dots, d^\mathrm{bin}_M],
+\quad
+d^\mathrm{bin}_i
+=
+\begin{cases}
+0 & \text{if $d_i = 0$}\\
+1 & \text{otherwise}
+\end{cases}
+\end{align}
+By using this notation, the nonzero contribution condition is represented by the insertion
+\begin{align}
+1_{\bm I = (\bm d^{(m)} + \bm d^{(k)})_{01} }.
+\end{align}
+If index $\bm I$ in the summation $\sum_{|\bm I| = m}$ enjoys this condition, the remaining part is integral on an $(m-1)$-subsimplex labelled by $\bm I$, and the contribution is
+\begin{align}
+\frac{\prod_{I_i=1} (\bm d^{(m)} + \bm d^{(k)})_i ! }{
+[
+\sum_{I_i=1}(\bm d^{(m)} + \bm d^{(k)})_i + m -1 ]!
+}
+\end{align}
+which is derived in the same way of the integral formula shown in \ref{thm:integ_formula}.
+\end{proof}
+Applying this proposition to \cref{eqn:Lmk,eqn:Lmm}, we get the asymptotic formula of $
+\E_\text{samples}[
+\bm P_\text{ISK} \bm P_\text{ISK}^\top]$, or equivalently, $\E_\text{samples}[\bm P_\mathrm{OLS}^{(i)} (\bm P_\mathrm{OLS}^{(j)})^\top]$.
+For example,
+\begin{align}
+\E_\text{samples}[\bm P_\mathrm{OLS}^{(1)} (\bm P_\mathrm{OLS}^{(1)})^\top]
+&=
+\cref{eqn:P1P1}
+=
+\frac{\sigma^2 L}{N^{(1)}} \E_\text{samples}
+\Big[
+[\frac{1}{N^{(1)}} (\bm Z^{(1)})^\top \bm Z^{(1)} ]^{-1}
+\Big]
+\notag \\
+& \to
+\frac{\sigma^2 L}{N^{(1)}} \E_\text{samples}
+\Big[
+\bm \Lambda_{(1)}
+\Big]
+=
+\frac{\sigma^2 L}{N^{(1)}} \bm \Lambda_{(1)},
+\end{align}
+and
+\begin{align}
+&\E_\text{samples}[\bm P_\mathrm{OLS}^{(2)} (\bm P_\mathrm{OLS}^{(1)})^\top]
+\notag \\
+&=
+\cref{eqn:P2P1}
+=
+- \frac{\sigma^2 L}{N^{(1)}}
+\E_\text{samples}
+\Bigg[
+[\frac{1}{N^{(2)}} ({\bm Z}^{(2)})^\top {\bm Z}^{(2)}]^{-1}
+[\frac{1}{N^{(2)}}({\bm Z}^{(2)})^\top \bm Z^{(2)[1]}]
+[\frac{1}{N^{(1)}}({\bm Z}^{(1)})^\top {\bm Z}^{(1)}]^{-1}
+\Bigg]
+\notag \\
+& \to
+- \frac{\sigma^2 L}{N^{(1)}}
+\E_\text{samples}
+\Bigg[
+\bm \Lambda_{(2)}
+\bm \Lambda^{(2)[1]}
+\bm \Lambda_{(1)}
+\Bigg]
+=
+- \frac{\sigma^2 L}{N^{(1)}}
+\bm \Lambda_{(2)}
+\bm \Lambda^{(2)[1]}
+\bm \Lambda_{(1)},
+\end{align}
+where $\bm \Lambda$s are defined in the main body of the paper.
+As one can see, to complete our argument, it is sufficient to show the next proposition:
+\begin{prop}
+\begin{align}
+&\E_\text{all noises}
+\Big[
+\bm P^{(i)}_\mathrm{OLS}
+(\bm P^{(j)}_\mathrm{OLS})^\top
+\Big]
+\notag \\
+&=
+\sigma^2 L
+\sum_{
+\substack{
+m \leq i
+\\
+m \leq j
+}}
+\sum_{
+\substack{
+m\leq k_1<\cdots<k_{\heartsuit}< i
+\\
+m \leq l_1<\cdots<l_{\spadesuit}<j
+}
+}
+\frac{(-1)^{\heartsuit + \spadesuit}}{N^{(m)}}
+%\notag \\ \nline \quad \times %\qquad %\qquad
+\hat{\bm \Lambda}_{(i)}
+\hat{\bm \Lambda}^{(i)[k_{\heartsuit}]}
+\hat{\bm \Lambda}_{(k_{\heartsuit} )}
+%\hat{\bm \Lambda}^{(k_{\#_i})[k_{\#_i -1}]}
+\cdots
+\hat{\bm \Lambda}^{(k_1)[m]}
+\hat{\bm \Lambda}_{(m)}
+\hat{\bm \Lambda}^{[m](l_1)}
+\cdots
+\hat{\bm \Lambda}_{(l_{\spadesuit} )}
+\hat{\bm \Lambda}^{[l_{\spadesuit}](j)}
+\hat{\bm \Lambda}_{(j)},
+\label{eqn:31}
+\end{align}
+where
+\begin{align}
+&\hat{\bm \Lambda}^{(m)[k]}
+=
+\frac{1}{N^{(m)}}
+({\bm Z}^{(m)})^\top 
+{\bm Z}^{(m)[k]}
+\\
+&
+\hat{\bm \Lambda}^{[k](m)}
+=
+(\hat{\bm \Lambda}^{(m)[k]})^\top
+\\
+&
+\hat{\bm \Lambda}_{(m)}
+=
+[\frac{1}{N^{(m)}}({\bm Z}^{(m)})^\top 
+{\bm Z}^{(m)}]^{-1}
+\end{align}
+\end{prop}
+%%%
+\begin{proof}
+We show it by induction.
+For $(i, j) = (1, 1)$, the only possible contribution of the summation in \cref{eqn:31} is $m=1$ and the (RHS) reduces to
+\begin{align}
+\sigma^2 L
+\frac{(-1)^{0+0}}{N^{(1)}}
+\hat{\bm \Lambda}_{(1)}
+\hat{\bm \Lambda}^{(1)[1]}
+\hat{\bm \Lambda}_{(1)}
+\hat{\bm \Lambda}^{[1](1)}
+\hat{\bm \Lambda}_{(1)}
+=
+\frac{\sigma^2 L}{N^{(1)}}
+\hat{\bm \Lambda}_{(1)},
+\end{align}
+which is satisfied as we shown already.
+Now let us assume \cref{eqn:31} with $(k, j)$ for all $k< i+1$, then, by using the recursive relation \cref{eqn:rec_supp}, we get
+\begin{align}
+&\E_\text{all noises}
+\Big[
+\bm P_\mathrm{OLS}^{(i+1)}
+(\bm P_\mathrm{OLS}^{(j)})^\top
+\Big]
+\notag \\
+&=
+\E_\text{all noises}
+\Big[
+\Big\{
+-
+[(\bm Z^{(i+1)})^\top \bm Z^{(i+1)} ]^{-1}
+(\bm Z^{(i+1)})^\top
+\Big(
+\bm Y^{(i+1)}
++
+\sum_{k<i+1}
+\bm Z^{(i+1)[k]}
+\bm P_\mathrm{OLS}^{(k)}
+\Big)
+\Big\}
+(\bm P_\mathrm{OLS}^{(j)})^\top
+\Big].
+\label{eqn:41}
+\end{align}
+1st term gives
+\begin{align}
+&\E_\text{all noises}
+\Big[
+-
+[(\bm Z^{(i+1)})^\top \bm Z^{(i+1)} ]^{-1}
+(\bm Z^{(i+1)})^\top
+\bm Y^{(i+1)}
+(\bm P_\mathrm{OLS}^{(j)})^\top
+\Bigg]
+\notag \\
+&= %%%%
+\E_\text{all noises}
+\Big[
+-
+[(\bm Z^{(i+1)})^\top \bm Z^{(i+1)} ]^{-1}
+(\bm Z^{(i+1)})^\top
+\bm Y^{(i+1)}
+\Big\{
+-
+(\bm Y^{(j)})^\top
+\notag \\ & \hspace{180pt}
+-
+\sum_{m < j}
+(\bm P_\mathrm{OLS}^{(m)})^\top
+\bm Z^{[m](j)}
+\Big\}
+\bm Z^{(j)}
+[(\bm Z^{(j)})^\top \bm Z^{(j)} ]^{-1}
+\Big]
+\notag \\
+&= %%%%
+\E_\text{all noises}
+\Big[
+\underbrace{
+[(\bm Z^{(i+1)})^\top \bm Z^{(i+1)} ]^{-1}
+(\bm Z^{(i+1)})^\top
+\bm Y^{(i+1)}
+(\bm Y^{(j)})^\top
+\bm Z^{(j)}
+[(\bm Z^{(j)})^\top \bm Z^{(j)} ]^{-1}
+}_{(*1)}
+\notag \\ &
++
+\underbrace{
+[(\bm Z^{(i+1)})^\top \bm Z^{(i+1)} ]^{-1}
+(\bm Z^{(i+1)})^\top
+\bm Y^{(i+1)}
+\sum_{m < j}
+(\bm P_\mathrm{OLS}^{(m)})^\top
+\bm Z^{[m](j)}
+\bm Z^{(j)}
+[(\bm Z^{(j)})^\top \bm Z^{(j)} ]^{-1}
+}_{(*2)}
+\Big].
+\end{align}
+If $i+1 = j$, the first term only contribute because there is no $(\bm Y^{(i+1)})^\top$ in the summation $\sum_{m < j=i+1}$ of the second term, and it gives
+\begin{align}
+\E (*1)
+=
+[(\bm Z^{(i+1)})^\top \bm Z^{(i+1)} ]^{-1}
+=
+\frac{1}{N^{(i+1)}}
+\hat{\bm \Lambda}_{(i+1)}
+\label{eqn:43}
+\end{align}
+If $i+1 \neq j$, the first term vanish in the same reason.
+In this case, the second term possibly contribute if $i+1 < j$.
+By applying the recursive formula \cref{eqn:rec_supp} to $\bm P_\mathrm{OLS}^{(m)}$ repeatedly until $(\bm Y^{(i+1)})^\top$ appears , we get
+\begin{align}
+\E (*2)
+=
+\sigma^2 L
+\sum_{m < j}
+\sum_{m \leq l_1 < \dots < l_\spadesuit <j }
+\frac{(-1)^{\spadesuit}}{N^{(i+1)}}
+\hat{\bm \Lambda}_{(i+1)}
+\hat{\bm \Lambda}^{[i+1](l_1)}
+\hat{\bm \Lambda}_{(l_1)}
+\dots
+\hat{\bm \Lambda}_{(l_\spadesuit)}
+\hat{\bm \Lambda}^{[l_\spadesuit](j)}
+\hat{\bm \Lambda}_{(j)}.
+\label{eqn:44}
+\end{align}
+
+On the other hand, the 2nd term in \cref{eqn:41} is
+\begin{align}
+&
+\E_\text{all noises}
+\Big[
+-
+[(\bm Z^{(i+1)})^\top \bm Z^{(i+1)}]^{-1}
+(\bm Z ^{(i+1)})^\top
+\sum_{k<i+1}
+\bm Z^{(i+1)[k]}
+\bm P_\mathrm{OLS}^{(k)}
+(\bm P_\mathrm{OLS}^{(j)})^\top
+\Big]
+\notag \\
+&=
+\sum_{k<i+1}
+(-1)
+\hat{\bm \Lambda}_{(i+1)}
+\hat{\bm \Lambda}^{(i+1)[k]}
+\sigma^2 L
+\sum_{
+\substack{
+m \leq k
+\\
+m \leq j
+}}
+\sum_{
+\substack{
+m\leq k_1<\cdots<k_{\heartsuit}<k
+\\
+m \leq l_1<\cdots<l_{\spadesuit}<j
+}
+}
+\notag \\ & \qquad\qquad\qquad
+\frac{(-1)^{\heartsuit + \spadesuit}}{N^{(m)}}
+%\notag \\ \nline \quad \times %\qquad %\qquad
+\hat{\bm \Lambda}_{(k)}
+\hat{\bm \Lambda}^{(k)[k_{\heartsuit}]}
+\hat{\bm \Lambda}_{(k_{\heartsuit} )}
+%\hat{\bm \Lambda}^{(k_{\#_i})[k_{\#_i -1}]}
+\cdots
+\hat{\bm \Lambda}^{(k_1)[m]}
+\hat{\bm \Lambda}_{(m)}
+\hat{\bm \Lambda}^{[m](l_1)}
+\cdots
+\hat{\bm \Lambda}_{(l_{\spadesuit} )}
+\hat{\bm \Lambda}^{[l_{\spadesuit}](j)}
+\hat{\bm \Lambda}_{(j)}
+\notag \\
+&=
+\sigma^2 L
+\sum_{
+\substack{
+m \leq k
+\\
+m \leq j
+}}
+\sum_{
+\substack{
+m\leq k_1<\cdots<k_{\heartsuit}<k<i+1
+\\
+m \leq l_1<\cdots<l_{\spadesuit}<j
+}
+}
+\hat{\bm \Lambda}_{(i+1)}
+\hat{\bm \Lambda}^{(i+1)[k]}
+\notag \\ & \qquad\qquad\qquad
+\frac{(-1)^{\heartsuit+1 + \spadesuit}}{N^{(m)}}
+%\notag \\ \nline \quad \times %\qquad %\qquad
+\hat{\bm \Lambda}_{(k)}
+\hat{\bm \Lambda}^{(k)[k_{\heartsuit}]}
+\hat{\bm \Lambda}_{(k_{\heartsuit} )}
+%\hat{\bm \Lambda}^{(k_{\#_i})[k_{\#_i -1}]}
+\cdots
+\hat{\bm \Lambda}^{(k_1)[m]}
+\hat{\bm \Lambda}_{(m)}
+\hat{\bm \Lambda}^{[m](l_1)}
+\cdots
+\hat{\bm \Lambda}_{(l_{\spadesuit} )}
+\hat{\bm \Lambda}^{[l_{\spadesuit}](j)}
+\hat{\bm \Lambda}_{(j)}
+\notag \\
+&= %%%%
+\sigma^2 L
+\sum_{
+\substack{
+m \leq k
+\\
+m \leq j
+}}
+\sum_{
+\substack{
+m\leq k_1<\cdots<k_{\heartsuit}<k<i+1
+\\
+m \leq l_1<\cdots<l_{\spadesuit}<j
+}
+}
+\notag \\ & 
+\frac{(-1)^{\heartsuit+1 + \spadesuit}}{N^{(m)}}
+\hat{\bm \Lambda}_{(i+1)}
+\hat{\bm \Lambda}^{(i+1)[k]}
+%\notag \\ \nline \quad \times %\qquad %\qquad
+\hat{\bm \Lambda}_{(k)}
+\hat{\bm \Lambda}^{(k)[k_{\heartsuit}]}
+\hat{\bm \Lambda}_{(k_{\heartsuit} )}
+%\hat{\bm \Lambda}^{(k_{\#_i})[k_{\#_i -1}]}
+\cdots
+\hat{\bm \Lambda}^{(k_1)[m]}
+\hat{\bm \Lambda}_{(m)}
+\hat{\bm \Lambda}^{[m](l_1)}
+\cdots
+\hat{\bm \Lambda}_{(l_{\spadesuit} )}
+\hat{\bm \Lambda}^{[l_{\spadesuit}](j)}
+\hat{\bm \Lambda}_{(j)}
+\end{align}
+This is close to what we want to show by renaming $k = k_{\heartsuit + 1}$, but it lacks contribution from $m = i+1$:
+\begin{align}
+\sigma^2 L
+\sum_{m \leq j}
+\sum_{m \leq l_1 < \dots < l_\spadesuit <j }
+\frac{(-1)^{\spadesuit}}{N^{(i+1)}}
+\hat{\bm \Lambda}_{(i+1)}
+\hat{\bm \Lambda}^{[i+1](l_1)}
+\hat{\bm \Lambda}_{(l_1)}
+\dots
+\hat{\bm \Lambda}_{(l_\spadesuit)}
+\hat{\bm \Lambda}^{[l_\spadesuit](j)}
+\hat{\bm \Lambda}_{(j)}
+.
+\end{align}
+But is is compensated by \cref{eqn:43,eqn:44}, if $j=i+1$ and $j \neq i+1$ respectively, so we succeed in deriving the equation with $(i+1, j)$.
+
+On $(i, j+1)$ case, we can show it by repeating the above argument in transposed version.
+\end{proof}
+Now we complete the derivation of the asymptotic form of $\E_\text{samples}[\bm P_\text{ISK} \bm P_\text{ISK}^\top]$.
+
+
+
+
+%%%%%%  
+The following proposition gives the optimal value of the risk of inductive skeleton fitting in the case of $D=2$.
+\begin{prop}
+Let $N$ be a natural number and $a, b$ be positive real numbers.
+Let $f(x) = \frac{a}{x} + \frac{b}{N - x}$.
+Assume $a > b$ and $\frac{a - \sqrt{ab}}{a - b} < 1$.
+Then $\min \Set{f(x) | x \in \R, 0 < x < N} = \frac{a + b + 2 \sqrt{ab}}{N}$.
+\end{prop}
+
+\begin{proof}
+At first, we consider the differential of $f(x)$.
+We have
+\[
+    f'(x) = -\frac{(a - b) x^2 - 2aNx + aN^2}{x^2 (N - x)^2}.
+\]
+$f'(x) = 0$ if and only if $x = \frac{a \pm \sqrt{ab}}{a - b}N$.
+By the assumptions, $f(x)$ takes the minimal value at $x = \frac{a - \sqrt{ab}}{a - b}N$.
+Hence, we have
+\[
+    \min \Set{f(x) | x \in \R, 0 < x < N} = f(\frac{a - \sqrt{ab}}{a - b} N) = \frac{a + b + 2 \sqrt{ab}}{N}.
+\]
+\end{proof}
+
+
+%How to generate data sets, sample size, etc.
+\section{All experiments}\label{sec:numerical-experiments}
+This section provides all experiments we conducted and their detailed settings for completeness and reproducibility.
+
+\subsection{Synthetic instances}
+First of all, we present detailed experimental settings and results of synthetic instances described in \cref{main:sec:synthetic-instances} of the main paper.
+
+\subsubsection{Data generation}
+We consider the following data generating process to create synthetic instances.
+Given parameters $(L, M, N)$, we first define true control points $\bm p_{\bm d}\in \R^L~(\bm d \in \N^M_D)$ as follows:
+\begin{equation}\label{eqn:def_control_points}
+    \bm p_{\bm d} := \sum_{j=1}^M \frac{d_j}{D} \bm e_j,
+\end{equation}
+where $\bm e_j \in \R^L~(j = 1, \dots, M)$ is a unit vector whose $j$-th element is one and the others are zeros.
+The B\'ezier simplex defined by \cref{eqn:def_control_points} is a unit $(M-1)$-simplex on $\R^L$ and their $M$ vertices are $\bm e_j~(j = 1, \dots, M)$.
+
+Next, we randomly generated $N$ training points $\set{(\bm t_n, \bm x_n)}_{n = 1}^N$%$S_N = \Set{(\bm t_1, \bm x_1), \dots, (\bm t_N, \bm x_N)}$ and $S_{N(0)}, S_{N(1)}$
+for the all-at-once fitting and the inductive skeleton fitting respectively.
+For the all-at-once fitting, we generated parameters $\bm t_n~(n = 1, \dots, N)$ randomly from an uniform distribution $U(\Delta^{M-1})$, and set up $\bm x_n$ as follows:
+\begin{equation}\label{eqn:exp_add_noise}
+    \bm x_n = \sum_{\bm d \in \N^M_D} \binom{D}{\bm d} \bm t_n^{\bm d} \bm p_{\bm d} + \bm \varepsilon_n \quad (n = 1, \dots, N),
+\end{equation}
+where $\bm \varepsilon_n~(n = 1, \dots, N)$ is a noise generated from a normal distribution $N(\bm 0, 0.1^2 \bm I)$.
+
+For the inductive skeleton on the other hand, we set up training points for each dimensional subsimplex of $\Delta^{(m-1)} = \cup_{\card{\bm I} = m} \Delta^{\bm{I}}~(m = 1, \dots, M)$ to be learned.
+First, we decoupled $N$ into $N^{(m)}~(m = 0, \dots, M-1)$.
+To obtain parameters $\bm{t}^{(m)}_n~(n = 1, \dots, N^{(m)})$ from $\Delta^{(m)} = \cup_{\card{I} = m} \Delta^{\bm{I}}$, we further divided $N^{(m)}$ by the number of $m$-subsimplices $\Delta^{\bm{I}}~(\card{I} = m)$, and generated parameters of equal size from each uniform distribution $U(\Delta^{\bm{I}})$.
+%generated parameters $\bm{t}^{(m)}_n~(n = 1, \dots, N^{(m)}$ for each subsimplex from an uniform distribution $U(\Delta^m)$.
+Then we produced training points $\bm x^{(m)}_n~(n = 1, \dots, N^{(m)})$ in the same way as \cref{eqn:exp_add_noise} and obtained training points $\set{(\bm x_n^{(m)}, \bm t_n^{(m)})}_{n=1}^{N^{(m)}}$ for each $(m)$-skeleton.
+
+%In the experiments,
+\subsubsection{Experimental settings}
+Experiments were conducted on the following tuple $(N, M, L)$ with $D \in \Set{2, 3}$:
+\begin{itemize}
+    \item  $(M, L) = (8, 100)$ and $N \in \Set{250, 500, 1000, 2000}$;
+    \item  $(N, L) = (1000, 100)$ and $M \in \Set{3, 4, 5, 6, 7, 8}$;
+    \item  $(M, N) = (8, 1000)$ and $ M \in \Set{8, 25, 50, 100}$.
+\end{itemize}
+
+To verify the asymptotic risks derived in Section 3.1 and Section 3.2, we compared the following three methods:
+\begin{description}
+    \item[all-at-once] the all-at-once fitting (Section 3.1);
+    \item[inductive skeleton (non-optimal)] the inductive skeleton fitting (Section 3.2) with $N^{(0)} = \dots = N^{(M-1)} = N / M$, which is not the minimizer of the risk of the inductive skeleton fitting;
+    \item[inductive skeleton (optimal)] the inductive skeleton fitting (Section 3.2) where $N^{(0)}, N^{(1)}, \dots, N^{(M-1)}$ are determined by minimizing the risk of the inductive skeleton fitting under the constraints $\sum_{m = 0}^{M-1} N^{(m)} = N$ and $N^{(m)}\geq 0~(m = 0, \dots, M-1)$. The actual sample sizes $N^{(m)}$ for each $(M,D)$ are described in \cref{tab:optimal-subsample-ratio}.
+    \Cref{tab:optimal-subsample-ratio} shows the optimal solutions of $N^{(m)}$ for each pairs $(M, D)$.
+\end{description}
+%For the inductive skeleton fitting (optimal), we decoupled $N$ into $N(m)$ according to the following table:
+\begin{table}[ht]
+    \centering
+    \caption{Optimal subsample ratio for inductive skeleton fitting ($D$: degree of B\'ezier simplex, $M$: dimension of B\'ezier simplex, $N$: total sample size, $N^{(m)}$: sample size of $m$-skeleton).}
+    \label{tab:optimal-subsample-ratio}
+    \begin{tabular}{cccccccc}
+        \toprule
+        $D$     &$N^{(m)}$ &$M = 3$  &$M = 4$  &$M = 5$  &$M = 6$  &$M = 7$  &$M = 8$ \\ \midrule
+        $2$     &$N^{(0)}$ &0.262$N$ &0.229$N$ &0.228$N$ &0.233$N$ &0.238$N$ &0.242$N$\\ 
+                &$N^{(1)}$ &0.738$N$ &0.771$N$ &0.772$N$ &0.767$N$ &0.762$N$ &0.758$N$\\  \hline
+        $3$     &$N^{(0)}$ &0.118$N$ &0.083$N$ &0.066$N$ &0.058$N$ &0.052$N$ &0.051$N$\\
+                &$N^{(1)}$ &0.576$N$ &0.444$N$ &0.547$N$ &0.577$N$ &0.589$N$ &0.613$N$\\ 
+                &$N^{(2)}$ &0.306$N$ &0.473$N$ &0.387$N$ &0.365$N$ &0.359$N$ &0.336$N$\\ 
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+In this experiment, we estimated the B\'ezier simplex with degree $D = 2$ and 3 respectively.
+
+\subsubsection{All results}\label{sec:results}
+\Cref{fig:mse_vsN} shows box plots of MSEs over 20 trials and our theoretical risks for both the all-at-once fitting and the inductive skeleton fitting for each $N \in \Set{250, 500, 1000, 2000}$ with $(L, M) = (100, 8)$ and $D \in \Set{2, 3}$.
+We observed that these figures empirically show that our theoretical risks are correct for both $D = 2$ and 3, and the gap between the actual MSEs and the risks are sufficiently small at $N = 1000$.
+For both $D = 2$ and 3, the inductive skeleton (optimal) always achieved lower MSEs than that of the inductive skeleton (non-optimal).
+This result suggests the efficiency of optimizing the risk of the inductive skeleton fitting with respect to the sample sizes $N^{(m)}$ of each dimension.
+In addition, the inductive skeleton fitting (optimal) also outperformed the all-at-once fitting in the case of $D = 2$.
+This result supports the discussion described in Section 3.3.
+\begin{figure}[ht]
+ \begin{minipage}{0.49\hsize}
+        \centering
+    \includegraphics[width=1\textwidth]{neurips2019/fig/D=2_M=8_L=100.pdf}
+    \subcaption{D=2}
+    \label{fig:mse_vsN_d2}
+ \end{minipage}
+ \begin{minipage}{0.49\hsize}
+        \centering
+    \includegraphics[width=1\textwidth]{neurips2019/fig/D=3_M=8_L=100.pdf}
+    \subcaption{D=3}
+    \label{fig:mse_vsN_d3}
+ \end{minipage}
+ \caption{Sample size $N$ vs. MSE with $(L,M)=(0.1,100,8)$ (boxplots over 20 trials and theoretical risks).}
+ \label{fig:mse_vsN}
+\end{figure}
+
+
+\Cref{fig:mse_vsM} shows box plots of MSEs over 20 trials and our theoretical risks for each $M \in \Set{3, 4, 5, 6, 7, 8}$ with $(L, N) = (100, 1000)$.
+As well as \cref{fig:mse_vsN}, the inductive skeleton fitting always outperformed the all-at-once fitting in the case of $D = 2$.
+Furthermore, the difference of MSEs between the inductive skeleton fitting and the all-at-once fitting gets wider as $M$ grows.
+This suggests that the inductive skeleton fitting with $D = 2$ approximates more effectively than the all-at-once fitting does for a high-dimensional $M$.
+\begin{figure}[ht]
+ \begin{minipage}{0.49\hsize}
+        \centering
+    \includegraphics[width=1\textwidth]{neurips2019/fig/D=2_L=100_N=1000.pdf}
+    \subcaption{$D = 2$}    \label{fig:mse_vsM_d2}
+ \end{minipage}
+ \begin{minipage}{0.49\hsize}
+        \centering
+    \includegraphics[width=1\textwidth]{neurips2019/fig/D=3_L=100_N=1000.pdf}
+    \subcaption{$D = 3$}    \label{fig:mse_vsM_d3}
+ \end{minipage}
+ \caption{Dimension of a simplex $M$ vs. MSE with $(L, N) = (100, 1000)$ (boxplots over 20 trials and theoretical risks).}
+ \label{fig:mse_vsM}
+\end{figure}
+
+\Cref{fig:mse_vsL} shows box plots of MSEs over 20 trials and our theoretical risks for each $L\in \Set{8, 25, 50, 100}$ and $D = 2, 3$ with $(M, N)=(8, 1000)$.
+As well as \cref{fig:mse_vsN,fig:mse_vsM}, the inductive skeleton fitting always outperform the all-at-once fitting in the case of $D = 2$.
+
+
+\begin{figure}[ht]
+ \begin{minipage}{0.49\hsize}
+        \centering
+    \includegraphics[width=1\textwidth]{neurips2019/fig/D=2_M=8_N=1000.pdf}
+    \subcaption{$D = 2$}   
+    \label{fig:mse_vsL_d2}
+ \end{minipage}
+ \begin{minipage}{0.49\hsize}
+        \centering
+    \includegraphics[width=1\textwidth]{neurips2019/fig/D=3_M=8_N=1000.pdf}
+    \subcaption{$D = 3$}   
+    \label{fig:mse_vsL_d3}
+ \end{minipage}
+ \caption{Dimension of control points $L$ vs. MSE with sample size $(M, N) = (3, 8, 1000)$ (boxplots over 20 trials and theoretical risks).}
+\label{fig:mse_vsL}
+\end{figure}
+
+\subsection{Multi-objective optimization instances}\label{sec:MOP-instances}
+Next, we describe the experiment protocol for the multi-objective optimization instances used in \cref{main:sec:MOP-instances} of the main paper.
+We only present the data generation process since the fitting and evaluation part are the same as the synthetic cases.
+
+\subsubsection{A generalized location problem}\label{sec:location-problem}
+We generalized the multi-objective location problem \cite{Kuhn1967} to a higher dimension:
+\begin{equation}
+\begin{split}
+\text{minimize } & f(x) = (f_1(x), f_2(x), f_3(x)) \text{ subject to }x \in \R^4\\
+\text{where }    & f_m(x) = \norm{x - e_m}^2 \quad (m = 1, \dots, 3)\\
+                 & e_1 = (1,0,0,0),\ e_2 = (0,1,0,0),\ e_3 = (0,0,1,0).
+\end{split}
+\end{equation}
+Note that this is a special case of the MED benchmark problem \cite{Hamada2010}.
+The MED problem is simplicial \cite{Hamada2017} and its Pareto set is known to be the convex hull of the minimizers of separate objective functions, i.e., the 2-simplex spanned by $e_1, e_2, e_3$.
+For each vertex, edge, face of this simplex, which is the Pareto set of each 1-, 2-, 3-objective subproblem, we generate a subsample according to the uniform distribution on it.
+
+\subsubsection{The group lasso}\label{sec:group-lasso}
+We applied the B\'ezier simplex fittings to estimation of the hyper-parameter space of a sparse regression method.
+The dataset used in this experiment was \texttt{Birthwt} in the R-package \texttt{MASS}, which contains 189 births at the Baystate Medical Centre, Springfield, Massachusetts during 1986 \cite{Hosmer1989,Venables2002}.
+From the dataset, we adopted six continuous features \texttt{age1}, \texttt{age2}, \texttt{age3}, \texttt{lwt1}, \texttt{lwt2}, \texttt{lwt3} as predictors and one continuous feature \texttt{bwt} as a response for regression analysis.
+Since the predictors are classified into two groups, \texttt{age} and \texttt{lwt}, the group lasso~\cite{Yuan2006} was employed.
+
+Put $N=189$ and $M=6$.
+Let $A$ be an $N \times M$ matrix of observations of the predictors, $x \in \R^M$ be a row vector of the predictor coefficients to be estimated, separated into two groups $x_\text{age} = (x_1, x_2, x_3)^\top$ and $x_\text{lwt} = (x_4, x_5, x_6)^\top$, and $y \in \R^N$ be a row vector of observations of the response.
+The group lasso regressor is the solution to the following problem:
+\begin{equation}\label{eqn:group-lasso}
+\text{minimize } \frac{1}{2N} \norm{Ax - y}^2 + \frac{\lambda}{\sqrt{3}} \paren{\norm{x_\text{age}} + \norm{x_\text{lwt}}} \text{ subject to } x \in \R^6
+\end{equation}
+where $\norm{\cdot}$ is the Euclidean norm, and $\lambda$ is a positive number to be tuned by users.
+This original form suffers from two drawbacks:
+\begin{itemize}
+    \item Choosing an appropriate value for $\lambda$ involves a grid search on an unbounded domain.
+    \item Since two groups have physically different units of measurement, same weights are not always appropriate even if their values are normalized.
+\end{itemize}
+
+Instead, we consider each term in \cref{eqn:group-lasso} as a separate objective function:
+\begin{equation}\label{eqn:group-lasso-mop}
+\begin{split}
+    \text{minimize } & f(x)   = (f_1(x), f_2(x), f_3(x)) \text{ subject to } x \in \R^6\\
+    \text{where }    & f_1(x) = \norm{Ax - y}^2,\ f_2(x) = \norm{x_\text{age}}^2,\ f_3(x) = \norm{x_\text{lwt}}^2.
+\end{split}
+\end{equation}
+Notice that the use of the squared norm in $f_2$ and $f_3$ does not change their solutions.
+It is easy to see that every objective function in \cref{eqn:group-lasso-mop} is convex but not strongly convex.
+We make them strongly convex by the following perturbation:
+\begin{align*}
+    \tilde f_1 &= f_1 + \varepsilon \norm{x}^2,\\
+    \tilde f_2 &= f_2 + \varepsilon \norm{x}^2,\\
+    \tilde f_3 &= f_3 + \varepsilon \norm{x}^2
+\end{align*}
+where $\varepsilon$ is an arbitrarily small positive number (we set $\varepsilon=10^{-4}$).
+Now the problem minimizing a mapping $\tilde f= (\tilde f_1, \tilde f_2, \tilde f_3)$ is strongly convex.
+By \cite[Theorems 1.1 and 3.1]{Hamada2019}, this problem is weakly simplicial and the mapping
+\begin{equation}\label{eqn:group-lasso-sop}
+    x^*(w) = \arg\min_x \inprod{w}{f(x)}
+\end{equation}
+is well-defined and continuous on $\Delta^2$, satisfying $x^*(\Delta^2_I) = X^*(\tilde f_I)$ for all $I \subseteq \set{1,2,3}$.
+
+Then, we obtained subsamples by solving \cref{eqn:group-lasso-sop} repeatedly with varying $w \in \Delta^2_I$ for each $I \subseteq \set{1, 2, 3}$.
+For each such $I$, the weight $w$ was drawn from the uniform distribution on $\Delta^2_I$ and the problem \cref{eqn:group-lasso-sop} was solved by the steepest descent method.
+
+The same idea can be applied to a broad range of sparse learning methods, including the original lasso \cite{Tibshirani1996}, the fused lasso \cite{Tibshirani2005}, the smooth lasso \cite{Hebiri2011}, and the elastic net \cite{Zou2005}.
+For those methods, their group-wise regularization terms can be considered as separate objectives, and the resulting problems would be many-objective (four-objective or more) where the all-at-once fitting will much outperform over the inductive skeleton fitting.
+We however remark that the bridge regression \cite{Frank1993} is not the case since its regularization term using a nonconvex $\ell_p$-norm (i.e., $p < 1$) cannot change into a strongly convex function via perturbations.
+
+\subsubsection{The Pareto fronts of each multi-objective optimization problem}\label{sec:Pareto-fronts}
+\Cref{fig:Pareto-fronts} shows the Pareto fronts of the location problem and the group lasso.
+From \cref{fig:Pareto-fronts}, we can see that the Pareto front of the location problem can be represented by a B\'ezier simplex of degree $D=2$.
+For the group lasso on the other hand, its Pareto front cannot be represented by a a B\'ezier simplex of degree $D=2$ but of $D=3$. 
+\begin{figure}[ht]
+ \begin{minipage}{0.49\hsize}
+        \centering
+    \includegraphics[width=1\textwidth]{neurips2019/fig/pareto_med.pdf}
+    \subcaption{Location problem}   
+    \label{fig:Pareto-front-location-problem}
+ \end{minipage}
+ \begin{minipage}{0.49\hsize}
+        \centering
+    \includegraphics[width=1\textwidth]{neurips2019/fig/pareto_grouplasso.pdf}
+    \subcaption{Group lasso}   
+    \label{fig:Pareto-front-group-lasso}
+ \end{minipage}
+ \caption{The Pareto fronts of the location problem and the group lasso.}
+\label{fig:Pareto-fronts}
+\end{figure}
+
+% \section{Application to Hyper-parameter Tuning of Elastic Net}\label{sec:application}
+% The elastic net~\cite{Zou2005} is a regression method for linear models with multicollinearity and sparsity.
+% Given a matrix $A$ with $m$ rows of observations and $n$ columns of features (may be $m \ll n$), a row vector $y$ of $m$ responses, the elastic net regression is the solution to the following problem:
+% \begin{equation}\label{eqn:elastic-net}
+% \text{minimize } \frac{1}{2N} \norm{Ax - y}^2 + \alpha \paren{\rho \abs{x} + \frac{1 - \rho}{2} \norm{x}^2} \text{ subject to } x \in \R^n
+% \end{equation}
+% where $\norm{\cdot}$ is the Euclidean norm, $\abs{\cdot}$ is the $\ell_1$-norm, and $\alpha, \rho \geq 0$ are fixed coefficients for regularization.
+% Note that with $\alpha = 0$, it is the ordinary least squares regression; with $\alpha > 0$ and $\rho = 0$, it becomes the ridge regression \cite{Hoerl1970} which stabilizes a solution against multicollinear variables; with $\alpha > 0$ and $\rho = 1$, it turns into the lasso regression \cite{Tibshirani1996} which finds a sparse solution from a lot of features; when $\alpha > 0$ and $0 < \rho < 1$, it thus inherits both of their properties.
+% Choosing appropriate values for $\alpha$ and $\rho$ involves a 2-D grid search on an unbounded domain, which often requires heavy computational effort.
+
+% We consider each term in \cref{eqn:elastic-net} as an objective function:
+% \begin{equation}\label{eqn:elastic-net-mop}
+% \begin{split}
+%     \text{minimize } & f(x)   = (f_1(x), f_2(x), f_3(x)) \text{ subject to } x \in \R^n\\
+%     \text{where }    & f_1(x) = \norm{Ax - y}^2,\ f_2(x) = \abs{x},\ f_3(x) = \norm{x}^2.
+% \end{split}
+% \end{equation}
+% While $f_3$ is strongly convex, $f_1$ and $f_2$ are (not strongly) convex.
+% We make them strongly convex by the following perturbation:
+% \begin{align}
+% \tilde f_1 &= f_1 + \varepsilon_1 f_3,\\
+% \tilde f_2 &= f_2 + \varepsilon_2 f_3
+% \end{align}
+% where $\varepsilon_1, \varepsilon_2 > 0$ are arbitrarily small numbers.
+% Now the problem minimizing a mapping $\tilde f= (\tilde f_1, \tilde f_2, f_3)$ is strongly convex.
+% This problem is weakly simplicial and the mapping
+% \[
+%  x^*(w) = \arg\min_x \inprod{w}{f(x)}
+% \]
+% is well-defined and continuous on $\Delta^2$ with $x^*(\Delta^2_I) = X^*(\tilde f_I)$ for all $I \subseteq \Set{1,2,3}$.
+
+% We can obtain subsamples by solving each subproblem and can fit a B\'ezier triangle of degree two.
+% By setting the weight as
+% \[
+% w = (1,0,0),(0,1,0),(0,0,1),(\frac 1 2, \frac 1 2, 0),(\frac 1 2, 0, \frac 1 2), (0, \frac 1 2, \frac 1 2),
+% \]
+% we obtain seven models and their objective values evaluated with test data.
+% We obtain an approximate trade-off triangle between error, sparsity, and multicollinearity.
+
+% We convert weights $(w_1, w_2, w_3) \in \Delta^2$ to regularization coefficients $(\alpha, \rho) \in \R_{\geq 0}^2$ for the \texttt{scikit-learn}'s elastic net as follows:
+% \[
+% \alpha = \frac{w_2 + w_3 + 2 \varepsilon}{w_1 + \varepsilon},\quad
+% \rho = \frac{w_2 + \varepsilon}{w_2 + w_3 + 2 \varepsilon}
+% \]
+% where $\varepsilon > 0$ is a small number to avoid numerical instability (we set $\varepsilon=10^{-4}$).
+
+% The same idea can be applied to a broad range of sparse learning methods, including the group LASSO \cite{Yuan2006}, the fused LASSO \cite{Tibshirani2005}, the smooth LASSO \cite{Hebiri2011}, and their elastic net counterparts.
+% For those methods, their group-wise regularization terms can be considered as separate objectives, and the resulting problems would be many-objective (four-objective or more) where the inductive skeleton will much outperform over the all-at-once fitting.
+% We however remark that the bridge regression \cite{Frank1993} is not the case since its regularization term using a nonconvex $\ell_p$-norm (i.e., $p < 1$) cannot change into a strongly convex function via perturbations.
+
+
+\bibliographystyle{plain}
+\bibliography{reference}
+\end{document}
